@@ -218,8 +218,12 @@ class CarState(CarStateBase):
       ret.gas = pt_cp.vl["Motor_3"]['Fahrpedal_Rohsignal'] / 100.0
       ret.gasPressed = ret.gas > 0
     else:
-      ret.gas = (cam_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS'] + cam_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS2']) / 2.
+      self.gasInterceptorSensor1 = cam_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS']
+      self.gasInterceptorSensor2 = cam_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS2']
+      ret.gas = (self.gasInterceptorSensor1 + self.gasInterceptorSensor2) / 2
+      #ret.gas = (cam_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS'] + cam_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS2']) / 2.
       ret.gasPressed = ret.gas > 468
+      print(">>> carstate.py gasInterceptorSensor1:", self.gasInterceptorSensor1, "gasInterceptorSensor2", self.gasInterceptorSensor2)
 
     ret.brake = pt_cp.vl["Bremse_5"]['Bremsdruck'] / 250.0  # FIXME: this is pressure in Bar, not sure what OP expects
     ret.brakePressed = bool(pt_cp.vl["Motor_2"]['Bremstestschalter'])
