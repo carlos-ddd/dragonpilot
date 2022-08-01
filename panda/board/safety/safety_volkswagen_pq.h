@@ -1,7 +1,5 @@
-
-
 // Include Tesla radar safety code
-#include "safety_teslaradar.h"
+//#include "safety_teslaradar.h"
 
 // Safety-relevant steering constants for Volkswagen
 const int VOLKSWAGEN_PQ_MAX_STEER = 300;                // 3.0 Nm (EPS side max of 3.0Nm with fault if violated)
@@ -241,6 +239,7 @@ static int volkswagen_pq_tx_hook(CANPacket_t *to_send) {
  // Tesla Radar TX hook
  //check if this is a teslaradar vin message
  //capture message for radarVIN and settings
+/*
  if (addr == MSG_TESLA_VIN) {
    int id = (to_send->RDLR & 0xFF);
    int radarVin_b1 = ((to_send->RDLR >> 8) & 0xFF);
@@ -285,7 +284,7 @@ static int volkswagen_pq_tx_hook(CANPacket_t *to_send) {
       return 0;
     }
   }
-
+*/
   // GAS PEDAL: safety check
   if (addr == MSG_GAS_COMMAND) {
     if (!controls_allowed) {
