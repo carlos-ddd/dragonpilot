@@ -1,0 +1,5 @@
+Run these two commands after you ssh into the eon.
+
+echo 'export SKIP_FW_QUERY=1' >> /data/openpilot/launch_env.sh && echo 'export FINGERPRINT="VOLKSWAGEN PQ35/PQ46/NMS GEN"' >> /data/openpilot/launch_env.sh
+
+echo -n "gateway" > /data/params/d/ForceNetworkLocation
