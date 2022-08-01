@@ -10,9 +10,14 @@ TransmissionType = car.CarParams.TransmissionType
 GearShifter = car.CarState.GearShifter
 
 class CarControllerParams:
-  HCA_STEP = 2                   # HCA_01 message frequency 50Hz
-  LDW_STEP = 10                  # LDW_02 message frequency 10Hz
+  HCA_STEP = 2                   # HCA message frequency 50Hz on all vehicles
+  LDW_STEP = 5                   # LDW message frequency 20Hz on PQ35/PQ46/NMS
   GRA_ACC_STEP = 3               # GRA_ACC_01 message frequency 33Hz
+  MOB_STEP = 2                   # PQ_MOB message frequency 50Hz
+  GAS_STEP = 2                   # GAS_COMMAND message frequency 50Hz
+  AWV_STEP = 2                   # ACC LED Control 20ms = 50Hz
+  ACA_STEP = 4                   # mACC_GRA_Anzeige 40ms = 25Hz
+  OPSTA_STEP = 10                # mOP_Status1 to STM32 100ms = 10 Hz
 
   GRA_VBP_STEP = 100             # Send ACC virtual button presses once a second
   GRA_VBP_COUNT = 16             # Send VBP messages for ~0.5s (GRA_ACC_STEP * 16)
@@ -21,14 +26,15 @@ class CarControllerParams:
   # Limiting rate-of-change based on real-world testing and Comma's safety
   # requirements for minimum time to lane departure.
   STEER_MAX = 300                # Max heading control assist torque 3.00 Nm
-  STEER_DELTA_UP = 4             # Max HCA reached in 1.50s (STEER_MAX / (50Hz * 1.50))
+  STEER_DELTA_UP = 10            # Max HCA reached in 0.60s (STEER_MAX / (50Hz * 0.60))
   STEER_DELTA_DOWN = 10          # Min HCA reached in 0.60s (STEER_MAX / (50Hz * 0.60))
-  STEER_DRIVER_ALLOWANCE = 80
+  STEER_DRIVER_ALLOWANCE = 40
   STEER_DRIVER_MULTIPLIER = 3    # weight driver torque heavily
   STEER_DRIVER_FACTOR = 1        # from dbc
 
 class CANBUS:
   pt = 0
+  br = 1
   cam = 2
 
 class DBC_FILES:
@@ -43,7 +49,9 @@ BUTTON_STATES = {
   "cancel": False,
   "setCruise": False,
   "resumeCruise": False,
-  "gapAdjustCruise": False
+  "gapAdjustCruise": False,
+  "longUp" : False,
+  "longDown" : False
 }
 
 MQB_LDW_MESSAGES = {
@@ -56,6 +64,21 @@ MQB_LDW_MESSAGES = {
   "laneAssistTakeOverSilent": 8,        # "Lane Assist: Please Take Over Steering" silent
   "emergencyAssistChangingLanes": 9,    # "Emergency Assist: Changing lanes..." with urgent beep
   "laneAssistDeactivated": 10,          # "Lane Assist deactivated." silent with persistent icon afterward
+}
+
+PQ_LDW_MESSAGES = {
+  "none": 0,                            # Nothing to display
+  "laneAssistUnavail": 1,               # "Lane Assist currently not available."
+  "laneAssistUnavailSysError": 2,       # "Lane Assist system error"
+  "laneAssistUnavailNoSensorView": 3,   # "Lane Assist not available. No sensor view."
+  "laneAssistTakeOver": 4,              # "Lane Assist: Please Take Over Steering"
+  "laneAssistDeactivTrailer": 5,        # "Lane Assist: no function with trailer"
+}
+
+PQ_LDW_SOUND = {
+  "none": 0,                            # silent
+  "info_chime": 1,
+  "warn_chime": 2,
 }
 
 # Check the 7th and 8th characters of the VIN before adding a new CAR. If the

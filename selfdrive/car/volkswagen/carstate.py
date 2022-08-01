@@ -4,11 +4,23 @@ from selfdrive.config import Conversions as CV
 from selfdrive.car.interfaces import CarStateBase
 from opendbc.can.parser import CANParser
 from opendbc.can.can_define import CANDefine
-from selfdrive.car.volkswagen.values import DBC_FILES, CANBUS, NetworkLocation, TransmissionType, GearShifter, BUTTON_STATES, CarControllerParams
+from selfdrive.car.volkswagen.values import DBC, CANBUS, NWL, TRANS, GEAR, BUTTON_STATES, CarControllerParams
+from selfdrive.car.volkswagen.PQacc_module import PQacc
 
 class CarState(CarStateBase):
   def __init__(self, CP):
     super().__init__(CP)
+    
+	self.ACC = PQacc()
+	
+	    ### START OF MAIN CONFIG OPTIONS ###
+    ### Do NOT modify here, modify in /data/bb_openpilot.cfg and reboot
+    self.useTeslaRadar = CP.enableGasInterceptor
+    self.radarVIN = "5YJSB7E17HF207544" # carlos_ddd
+    self.radarOffset = 0.
+    self.radarPosition = 1
+    self.radarEpasType = 3
+    ### END OF MAIN CONFIG OPTIONS ###
 
     if CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.volkswagenPq:
       can_define = CANDefine(DBC_FILES.pq46)
@@ -16,8 +28,11 @@ class CarState(CarStateBase):
       self.get_can_parser = self.get_pq_can_parser
       self.get_cam_can_parser = self.get_pq_cam_can_parser
       self.update = self.update_pq
+
       if CP.transmissionType == TransmissionType.automatic:
         self.shifter_values = can_define.dv["Getriebe_1"]['Waehlhebelposition__Getriebe_1_']
+      if CP.enableGasInterceptor:
+        self.openpilot_enabled = False
     else:
       can_define = CANDefine(DBC_FILES.mqb)
 
@@ -188,8 +203,13 @@ class CarState(CarStateBase):
     ret.yawRate = pt_cp.vl["Bremse_5"]['Giergeschwindigkeit'] * (1, -1)[int(pt_cp.vl["Bremse_5"]['Vorzeichen_der_Giergeschwindigk'])] * CV.DEG_TO_RAD
 
     # Update gas, brakes, and gearshift.
-    ret.gas = pt_cp.vl["Motor_3"]['Fahrpedal_Rohsignal'] / 100.0
-    ret.gasPressed = ret.gas > 0
+    if not self.CP.enableGasInterceptor:
+      ret.gas = pt_cp.vl["Motor_3"]['Fahrpedal_Rohsignal'] / 100.0
+      ret.gasPressed = ret.gas > 0
+    else:
+      ret.gas = (cam_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS'] + cam_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS2']) / 2.
+      ret.gasPressed = ret.gas > 468
+
     ret.brake = pt_cp.vl["Bremse_5"]['Bremsdruck'] / 250.0  # FIXME: this is pressure in Bar, not sure what OP expects
     ret.brakePressed = bool(pt_cp.vl["Motor_2"]['Bremstestschalter'])
 
@@ -228,10 +248,20 @@ class CarState(CarStateBase):
     # We use the speed preference for OP.
     self.displayMetricUnits = not pt_cp.vl["Einheiten_1"]["MFA_v_Einheit_02"]
 
-    # Update ACC radar status.
-    # FIXME: This is unfinished and not fully correct, need to improve further
-    ret.cruiseState.available = bool(pt_cp.vl["GRA_Neu"]['GRA_Hauptschalt'])
-    ret.cruiseState.enabled = True if pt_cp.vl["Motor_2"]['GRA_Status'] in [1, 2] else False
+    # Consume blind-spot monitoring info/warning LED states, if available. The
+    # info signal (LED on) is enabled whenever a vehicle is detected in the
+    # driver's blind spot. The warning signal (LED flashing) is enabled if the
+    # driver shows possibly hazardous intent toward a BSM detected vehicle, by
+    # setting the turn signal in that direction, or (for cars with factory Lane
+    # Assist) approaches the lane boundary in that direction. Size of the BSM
+    # detection box is dynamic based on speed and road curvature.
+    # Refer to VW Self Study Program 890253: Volkswagen Driver Assist Systems,
+    # pages 32-35.
+    if self.CP.enableBsm:
+      ret.leftBlindspot = bool(cam_cp.vl["SWA_1"]["SWA_Infostufe_SWA_li"]) or bool(cam_cp.vl["SWA_1"]["SWA_Warnung_SWA_li"])
+      ret.rightBlindspot = bool(cam_cp.vl["SWA_1"]["SWA_Infostufe_SWA_re"]) or bool(cam_cp.vl["SWA_1"]["SWA_Warnung_SWA_re"])
+
+
 
     # Update ACC setpoint. When the setpoint reads as 255, the driver has not
     # yet established an ACC setpoint, so treat it as zero.
@@ -240,12 +270,47 @@ class CarState(CarStateBase):
       ret.cruiseState.speed = 0
 
     # Update control button states for turn signals and ACC controls.
-    self.buttonStates["accelCruise"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Up_kurz']) or bool(pt_cp.vl["GRA_Neu"]['GRA_Up_lang'])
-    self.buttonStates["decelCruise"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Down_kurz']) or bool(pt_cp.vl["GRA_Neu"]['GRA_Down_lang'])
+    self.buttonStates["accelCruise"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Up_kurz'])# or bool(pt_cp.vl["GRA_Neu"]['GRA_Up_lang'])
+    self.buttonStates["decelCruise"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Down_kurz'])# or bool(pt_cp.vl["GRA_Neu"]['GRA_Down_lang'])
     self.buttonStates["cancel"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Abbrechen'])
     self.buttonStates["setCruise"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Neu_Setzen'])
     self.buttonStates["resumeCruise"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Recall'])
     self.buttonStates["gapAdjustCruise"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Zeitluecke'])
+    self.buttonStates["longUp"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Up_lang'])
+    self.buttonStates["longDown"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Down_lang'])
+    # Update ACC radar status.
+    # FIXME: This is unfinished and not fully correct, need to improve further
+    ret.cruiseState.available = bool(pt_cp.vl["GRA_Neu"]['GRA_Hauptschalt'])
+    ret.cruiseState.enabled = True if pt_cp.vl["Motor_2"]['GRA_Status'] in [1, 2] else False
+    # ACC emulation (overwriting cruiseState-values from CAN)
+    self.ACC_engaged, self.v_ACC = self.ACC.update_acc_iter_4CS(ret.vEgo*CV.MS_TO_KPH, self.buttonStates, ret.cruiseState.available, self.openpilot_enabled, ret.cruiseState.enabled)
+    # Engage open pilot if ACC emulation says so
+    if self.CP.enableGasInterceptor and self.ACC_engaged:
+      self.openpilot_enabled = True
+    # if ACC emulation is not active we want OP still engaged but setspeed <= current speed
+    elif self.CP.enableGasInterceptor and not self.ACC_engaged:
+      self.v_ACC = (ret.vEgo - 1) * CV.MS_TO_KPH
+    else:
+      self.openpilot_enabled = False
+
+    # Check if Gas or Brake pressed and override ACC emulation
+    if self.CP.enableGasInterceptor and (ret.gasPressed or ret.brakePressed):
+      self.openpilot_enabled = False
+
+    # Override openpilot enabled if gas interceptor installed
+    if self.CP.enableGasInterceptor and self.openpilot_enabled:
+      ret.cruiseState.enabled = True
+    else:
+      ret.cruiseState.enabled = False
+
+    ret.cruiseState.speed = self.v_ACC * CV.KPH_TO_MS
+    if ret.clutchPressed:                                           # during clutch open do not try to accelerate
+      ret.cruiseState.speed = min(ret.vEgo, ret.cruiseState.speed)  # -> neutral speed setpoint but do not increase
+                                                                    #    (to not prevent braking with clutch open)      
+    if ret.cruiseState.speed > 70:  # 255 kph in m/s == no current setpoint
+      ret.cruiseState.speed = 0
+    
+    # blinke / turn indicator
     ret.leftBlinker = bool(pt_cp.vl["Gate_Komf_1"]['GK1_Blinker_li'])
     ret.rightBlinker = bool(pt_cp.vl["Gate_Komf_1"]['GK1_Blinker_re'])
 
@@ -265,7 +330,12 @@ class CarState(CarStateBase):
 
     # Check to make sure the electric power steering rack is configured to
     # accept and respond to HCA_01 messages and has not encountered a fault.
-    self.steeringFault = pt_cp.vl["Lenkhilfe_2"]['LH2_Sta_HCA'] not in [3, 5]
+    self.steeringFault = pt_cp.vl["Lenkhilfe_2"]['LH2_Sta_HCA'] not in [1, 3, 5, 7] # 1 missing in newer configs ???? carlos_ddd
+
+    # Read ABS pump for checking in ACC braking is working.
+    if self.CP.enableGasInterceptor:
+      self.ABSWorking = pt_cp.vl["Bremse_8"]["BR8_Sta_ADR_BR"]
+      self.currentSpeed = ret.vEgo
 
     return ret
 
@@ -389,7 +459,8 @@ class CarState(CarStateBase):
       ("MFA_v_Einheit_02", "Einheiten_1"),       # MPH vs KMH speed display
       ("Bremsinfo", "Kombi_1"),                  # Manual handbrake applied
       ("GRA_Status", "Motor_2"),                 # ACC engagement status
-      ("GRA_Hauptschalt", "GRA_Neu"),            # ACC button, on/off
+      ("Soll_Geschwindigkeit_bei_GRA_Be", "Motor_2"),  # ACC speed setpoint from ECU??? check this
+      ("GRA_Hauptschalt", "GRA_Neu"),              # ACC button, on/off
       ("GRA_Abbrechen", "GRA_Neu"),              # ACC button, cancel
       ("GRA_Neu_Setzen", "GRA_Neu"),             # ACC button, set
       ("GRA_Up_lang", "GRA_Neu"),                # ACC button, increase or accel, long press
@@ -398,6 +469,9 @@ class CarState(CarStateBase):
       ("GRA_Down_kurz", "GRA_Neu"),              # ACC button, decrease or decel, short press
       ("GRA_Recall", "GRA_Neu"),             # ACC button, resume
       ("GRA_Zeitluecke", "GRA_Neu"),     # ACC button, time gap adj
+      ("BR8_Sta_ADR_BR", "Bremse_8", 0),            # ABS Pump actively braking for ACC
+      ("ESP_Eingriff", "Bremse_1", 0),              # ABS stability intervention
+      ("ASR_Anforderung", "Bremse_1", 0),           # ABS slip detected
     ]
 
     checks = [
@@ -408,11 +482,12 @@ class CarState(CarStateBase):
       ("Motor_3", 100),           # From J623 Engine control module
       ("Airbag_1", 50),           # From J234 Airbag control module
       ("Bremse_5", 50),           # From J104 ABS/ESP controller
+      ("Bremse_8", 50),           # From J??? ABS/ACC controller
       ("GRA_Neu", 50),            # From J??? steering wheel control buttons
       ("Kombi_1", 50),            # From J285 Instrument cluster
       ("Motor_2", 50),            # From J623 Engine control module
       ("Lenkhilfe_2", 20),        # From J500 Steering Assist with integrated sensors
-      ("Gate_Komf_1", 10),     # From J533 CAN gateway
+      ("Gate_Komf_1", 10),        # From J533 CAN gateway
       ("Einheiten_1", 1),         # From J??? cluster or gateway
     ]
 
@@ -423,13 +498,17 @@ class CarState(CarStateBase):
       signals += [("Kupplungsschalter", "Motor_1"),  # Clutch switch
                   ("GK1_Rueckfahr", "Gate_Komf_1")]  # Reverse light from BCM
       checks += [("Motor_1", 100)]  # From J623 Engine control module
+#      checks += [("Getriebe_2", 100)]  # From J623 Engine control module (due to manual shift, there is no TCU so ECU emits it)
 
     if CP.networkLocation == NetworkLocation.fwdCamera:
       # The ACC radar is here on CANBUS.pt
       signals += [("ACA_V_Wunsch", "ACC_GRA_Anziege")]  # ACC set speed
       checks += [("ACC_GRA_Anziege", 25)]  # From J428 ACC radar control module
+      if CP.enableBsm:
+        signals += PqExtraSignals.bsm_radar_signals
+        checks += PqExtraSignals.bsm_radar_checks
 
-    checks = []
+    #checks = []
     return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.pt, False)
 
   @staticmethod
@@ -471,9 +550,35 @@ class CarState(CarStateBase):
       # The ACC radar is here on CANBUS.cam
       signals += [("ACA_V_Wunsch", "ACC_GRA_Anziege")]  # ACC set speed
       checks += [("ACC_GRA_Anziege", 25)]  # From J428 ACC radar control module
+      if CP.enableBsm:
+        signals += PqExtraSignals.bsm_radar_signals
+        checks += PqExtraSignals.bsm_radar_checks
+        
+    if CP.enableGasInterceptor:
+      signals += [("INTERCEPTOR_GAS", "GAS_SENSOR", 0), ("INTERCEPTOR_GAS2", "GAS_SENSOR", 0)]
+      checks += [("GAS_SENSOR", 50)]
 
-    checks = []
+    #checks = []
     return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.cam, False)
+
+class PqExtraSignals:
+  # Additional signal and message lists for optional or bus-portable controllers
+  fwd_radar_signals = [
+    ("ACA_StaACC", "ACC_GRA_Anziege", 0),           # ACC drivetrain coordinator status
+    ("ACA_V_Wunsch", "ACC_GRA_Anziege", 0),         # ACC set speed
+  ]
+  fwd_radar_checks = [
+    ("ACC_GRA_Anziege", 25),                        # From J428 ACC radar control module
+  ]
+  bsm_radar_signals = [
+    ("SWA_Infostufe_SWA_li", "SWA_1", 0),           # Blind spot object info, left
+    ("SWA_Warnung_SWA_li", "SWA_1", 0),             # Blind spot object warning, left
+    ("SWA_Infostufe_SWA_re", "SWA_1", 0),           # Blind spot object info, right
+    ("SWA_Warnung_SWA_re", "SWA_1", 0),             # Blind spot object warning, right
+  ]
+  bsm_radar_checks = [
+    ("SWA_1", 20),                                  # From J1086 Lane Change Assist
+  ]
 
 class MqbExtraSignals:
   # Additional signal and message lists for optional or bus-portable controllers

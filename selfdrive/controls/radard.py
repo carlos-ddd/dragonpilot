@@ -210,7 +210,11 @@ def radard_thread(sm=None, pm=None, can_sock=None):
 
   while 1:
     can_strings = messaging.drain_sock_raw(can_sock, wait_for_one=True)
-    rr = RI.update(can_strings)
+    # carlos_ddd: no it can't -> discussed with @Edgy 28.01.2021
+    if CP.carName == "volkswagen":
+      rr, rrext, ahbCarDetected = RI.update(can_strings, v_ego=0)
+    else:
+      rr = RI.update(can_strings)
 
     if rr is None:
       continue

@@ -25,11 +25,9 @@ class CarInterface(CarInterfaceBase):
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), car_fw=None):
     ret = CarInterfaceBase.get_std_params(candidate, fingerprint)
     ret.carName = "volkswagen"
-    ret.radarOffCan = True
+    ret.radarOffCan = False	# carlos_ddd we have tesla radar ?
 
     if True:  # pylint: disable=using-constant-test
-
-      ret.enableBsm = 0x30F in fingerprint[0]  # SWA_01
 
       if candidate in PQ_CARS:
         # Configurations shared between all PQ35/PQ46/NMS vehicles
@@ -41,6 +39,9 @@ class CarInterface(CarInterfaceBase):
           ret.transmissionType = TransmissionType.automatic
         else:  # No trans at all
           ret.transmissionType = TransmissionType.manual
+
+        ret.enableBsm = 0x3BA in fingerprint[0]  # SWA_1
+
       else:
         # Set global MQB parameters
         ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.volkswagen)]
@@ -56,21 +57,53 @@ class CarInterface(CarInterfaceBase):
         else:
           ret.networkLocation = NetworkLocation.fwdCamera
 
-    # Global lateral tuning defaults, can be overridden per-vehicle
+        ret.enableBsm = 0x30F in fingerprint[0]  # SWA_01
 
+    # Global lateral tuning defaults, can be overridden per-vehicle
     ret.steerActuatorDelay = 0.1
     ret.steerRateCost = 1.0
     ret.steerLimitTimer = 0.4
     ret.steerRatio = 15.6  # Let the params learner figure this out
     tire_stiffness_factor = 1.0  # Let the params learner figure this out
+
     ret.lateralTuning.pid.kpBP = [0.]
     ret.lateralTuning.pid.kiBP = [0.]
     ret.lateralTuning.pid.kf = 0.00006
-    ret.lateralTuning.pid.kpV = [0.6]
-    ret.lateralTuning.pid.kiV = [0.2]
+    ret.lateralTuning.pid.kpV = [0.6] # old [0.3]
+    ret.lateralTuning.pid.kiV = [0.2] # old [0.1]
+
+    # Check for Comma Pedal
+    ret.enableGasInterceptor = True
+    # OP LONG parameters (https://github.com/commaai/openpilot/wiki/Tuning#Tuning-the-longitudinal-PI-controller)
+    ret.gasMaxBP = [0., 1.]  # m/s
+    ret.gasMaxV = [0.3, 1.0]  # max gas allowed
+    ret.brakeMaxBP = [0.]  # m/s
+    ret.brakeMaxV = [1.]  # max brake allowed (positive number)
+
+    ret.openpilotLongitudinalControl = True
+
+    ret.longitudinalTuning.deadzoneBP = [0.]  #m/s
+    ret.longitudinalTuning.deadzoneV = [.1]  # if control-loops (internal) error value is within +/- this value -> the error is set to 0.0
+
+    ret.longitudinalTuning.kpBP = [2.8, 8.3, 13.8, 22.2, 33.3]  # m/s
+    ret.longitudinalTuning.kpV = [2.,   2.,  3.,   4.2,  6.]
+
+    ret.longitudinalTuning.kiBP = [2.8, 8.3, 13.8, 22.2, 33.3]  # m/s
+    ret.longitudinalTuning.kiV = [2.,   1.,  1.2,  3.2,  3.]
+
+    # PQ lateral tuning HCA_Status 7
+    #            km/h                 50   126
+    ret.lateralTuning.pid.kpBP = [0., 14., 35.]
+    ret.lateralTuning.pid.kiBP = [0., 14., 35.]
+    ret.lateralTuning.pid.kpV = [0.12, 0.165, 0.185]
+    ret.lateralTuning.pid.kiV = [0.09, 0.10, 0.11]
+
+    ret.stoppingControl = True
+    ret.directAccelControl = False
+    ret.startAccel = 0.0
+
 
     # Per-chassis tuning values, override tuning defaults here if desired
-
     if candidate == CAR.ARTEON_MK1:
       ret.mass = 1733 + STD_CARGO_KG
       ret.wheelbase = 2.84
@@ -169,6 +202,7 @@ class CarInterface(CarInterfaceBase):
       ret.wheelbase = 2.58
       ret.steerRatio = 15.6
       tire_stiffness_factor = 1.0
+
     else:
       raise ValueError(f"unsupported car {candidate}")
 
