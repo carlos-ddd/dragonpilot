@@ -10,10 +10,10 @@ from selfdrive.car.volkswagen.PQacc_module import PQacc
 class CarState(CarStateBase):
   def __init__(self, CP):
     super().__init__(CP)
-    
-	self.ACC = PQacc()
-	
-	    ### START OF MAIN CONFIG OPTIONS ###
+
+    self.ACC = PQacc()
+
+	  ### START OF MAIN CONFIG OPTIONS ###
     ### Do NOT modify here, modify in /data/bb_openpilot.cfg and reboot
     self.useTeslaRadar = CP.enableGasInterceptor
     self.radarVIN = "5YJSB7E17HF207544" # carlos_ddd
