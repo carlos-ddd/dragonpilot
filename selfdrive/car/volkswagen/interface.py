@@ -75,32 +75,51 @@ class CarInterface(CarInterfaceBase):
     # Check for Comma Pedal
     ret.enableGasInterceptor = True
     # OP LONG parameters (https://github.com/commaai/openpilot/wiki/Tuning#Tuning-the-longitudinal-PI-controller)
-    ret.gasMaxBP = [0., 1.]  # m/s
-    ret.gasMaxV = [0.3, 1.0]  # max gas allowed
-    ret.brakeMaxBP = [0.]  # m/s
-    ret.brakeMaxV = [1.]  # max brake allowed (positive number)
+    # see Edgy's impelmentation now .... not longer neede in long planer!
+#    ret.gasMaxBP = [0., 1.]  # m/s
+#    ret.gasMaxV = [0.3, 1.0]  # max gas allowed
+#    ret.brakeMaxBP = [0.]  # m/s
+#    ret.brakeMaxV = [1.]  # max brake allowed (positive number)
 
     ret.openpilotLongitudinalControl = True
+    ret.longitudinalActuatorDelayUpperBound = 0.5  # s
+    ret.stoppingControl = True
+    ret.vEgoStopping = 1.0
+    ret.stopAccel = -0.5
+    ret.stoppingDecelRate = 0.3
 
-    ret.longitudinalTuning.deadzoneBP = [0.]  #m/s
-    ret.longitudinalTuning.deadzoneV = [.1]  # if control-loops (internal) error value is within +/- this value -> the error is set to 0.0
+    #carlos-ddd old
+#    ret.longitudinalTuning.deadzoneBP = [0.]  #m/s
+#    ret.longitudinalTuning.deadzoneV = [.1]  # if control-loops (internal) error value is within +/- this value -> the error is set to 0.0
+#    ret.longitudinalTuning.kpBP = [2.8, 8.3, 13.8, 22.2, 33.3]  # m/s
+#    ret.longitudinalTuning.kpV = [2.,   2.,  3.,   4.2,  6.]
+#    ret.longitudinalTuning.kiBP = [2.8, 8.3, 13.8, 22.2, 33.3]  # m/s
+#    ret.longitudinalTuning.kiV = [2.,   1.,  1.2,  3.2,  3.]
 
-    ret.longitudinalTuning.kpBP = [2.8, 8.3, 13.8, 22.2, 33.3]  # m/s
-    ret.longitudinalTuning.kpV = [2.,   2.,  3.,   4.2,  6.]
+    # Edgy new
+    ret.longitudinalTuning.deadzoneBP = [0.]
+    ret.longitudinalTuning.deadzoneV = [0.]
+    ret.longitudinalTuning.kpBP = [0.]
+    ret.longitudinalTuning.kpV = [0.1]
+    ret.longitudinalTuning.kiBP = [0.]
+    ret.longitudinalTuning.kiV = [0.03]
 
-    ret.longitudinalTuning.kiBP = [2.8, 8.3, 13.8, 22.2, 33.3]  # m/s
-    ret.longitudinalTuning.kiV = [2.,   1.,  1.2,  3.2,  3.]
-
-    # PQ lateral tuning HCA_Status 7
+    # PQ lateral tuning HCA_Status 7 carlos-ddd (old)
     #            km/h                 50   126
-    ret.lateralTuning.pid.kpBP = [0., 14., 35.]
-    ret.lateralTuning.pid.kiBP = [0., 14., 35.]
-    ret.lateralTuning.pid.kpV = [0.12, 0.165, 0.185]
+#    ret.lateralTuning.pid.kpBP = [0., 14., 35.]
+#    ret.lateralTuning.pid.kiBP = [0., 14., 35.]
+#    ret.lateralTuning.pid.kpV = [0.12, 0.165, 0.185]
+#    ret.lateralTuning.pid.kiV = [0.09, 0.10, 0.11]
+
+    # PQ lateral tuning HCA_Status 7 Edgy (new)
+    ret.lateralTuning.pid.kpBP = [0., 14., 20.]
+    ret.lateralTuning.pid.kiBP = [0., 14., 20.]
+    ret.lateralTuning.pid.kpV = [0.116, 0.13, 0.14]
     ret.lateralTuning.pid.kiV = [0.09, 0.10, 0.11]
 
     ret.stoppingControl = True
     ret.directAccelControl = False
-    ret.startAccel = 0.0
+    #ret.startAccel = 0.0
 
 
     # Per-chassis tuning values, override tuning defaults here if desired

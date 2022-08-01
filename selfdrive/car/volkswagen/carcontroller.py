@@ -36,7 +36,6 @@ class CarController():
       self.create_awv_control = volkswagencan.create_pq_awv_control
 #      self.create_aca_control = volkswagencan.create_pq_aca_control
       self.create_opsta_control = volkswagencan.create_pq_opsta_control
-      self.ldw_step = CarControllerParams.PQ_LDW_STEP
 
     self.hcaSameTorqueCount = 0
     self.hcaEnabledFrameCount = 0
