@@ -230,7 +230,7 @@ class RadarInterface(RadarInterfaceBase):
                     self.extPts[message].length = cpt2["Length"]
                     self.extPts[message].obstacleProb = cpt["ProbObstacle"]
                     self.extPts[message].timeStamp = int(
-                        self.rcp.ts[message + 1]["Index2"]
+                        self.rcp.vl_all[message + 1]["Index2"]
                     )
                     if cpt2["ProbClass"] >= CLASS_MIN_PROBABILITY:
                         self.extPts[message].objectClass = cpt2["Class"]

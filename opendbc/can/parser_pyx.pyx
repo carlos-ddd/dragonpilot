@@ -8,6 +8,7 @@ from libc.stdint cimport uint32_t, uint64_t, uint16_t
 from libcpp cimport bool
 from libcpp.map cimport map
 
+
 from .common cimport CANParser as cpp_CANParser
 from .common cimport SignalParseOptions, MessageParseOptions, dbc_lookup, SignalValue, DBC
 
@@ -16,7 +17,6 @@ import numbers
 from collections import defaultdict
 
 cdef int CAN_INVALID_CNT = 5
-
 
 cdef class CANParser:
   cdef:
