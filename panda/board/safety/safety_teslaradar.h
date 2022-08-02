@@ -224,9 +224,9 @@ static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
     tesla_radar_counter = tesla_radar_counter % 100;
 }
 
-static void teslaradar_rx_hook(CAN_FIFOMailBox_TypeDef *to_push)
+static void teslaradar_rx_hook(CANPacket_t *to_push)
 {
-  uint8_t bus_number = (to_push->RDTR >> 4) & 0xFF;
+  uint8_t bus_number = GET_BUS(to_push);
   uint32_t addr;
 
   if (to_push->RIR & 4)
