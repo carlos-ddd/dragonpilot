@@ -15,9 +15,11 @@ class CarInterface(CarInterfaceBase):
     self.buttonStatesPrev = BUTTON_STATES.copy()
 
     if CP.networkLocation == NetworkLocation.fwdCamera:
+      print(">>> interface.py: networklocation.fwdCamera")
       self.ext_bus = CANBUS.pt
       self.cp_ext = self.cp
     else:
+      print(">>> interface.py: networklocation-ELSE")
       self.ext_bus = CANBUS.cam
       self.cp_ext = self.cp_cam
 
@@ -29,7 +31,9 @@ class CarInterface(CarInterfaceBase):
 
     if True:  # pylint: disable=using-constant-test
 
+      print(">>> interface.py: candidat is", candidate)
       if candidate in PQ_CARS:
+        print(">>> interface.py: candidat in PQ_CARS")
         # Configurations shared between all PQ35/PQ46/NMS vehicles
         ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.volkswagenPq)]
 
@@ -37,12 +41,18 @@ class CarInterface(CarInterfaceBase):
         ret.networkLocation = NetworkLocation.fwdCamera if 0x368 in fingerprint[0] else NetworkLocation.gateway
         if 0x440 in fingerprint[0]:  # Getriebe_1
           ret.transmissionType = TransmissionType.automatic
+          print(">>> interface.py: automatic transmission detected")
         else:  # No trans at all
           ret.transmissionType = TransmissionType.manual
+          print(">>> interface.py: manual transmission detected")
 
         ret.enableBsm = 0x3BA in fingerprint[0]  # SWA_1
+        print(">>> interface.py: enableBsm based on fingerprint:", ret.enableBsm)
+
+        print(">>> interface.py: fingerprint[0]", fingerprint[0])
 
       else:
+        print(">>> interface.py: candidat is MQB (not in PQ_CARS!!!!)")
         # Set global MQB parameters
         ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.volkswagen)]
         if 0xAD in fingerprint[0]:  # Getriebe_11
@@ -217,6 +227,7 @@ class CarInterface(CarInterfaceBase):
       ret.wheelbase = 2.84
 
     elif candidate == CAR.GENERICPQ:
+      print(">>> interface.py: candidat is in CAR.GENERICPQ (usable)")
       ret.mass = 1375 + STD_CARGO_KG  # Average, varies on trim/package
       ret.wheelbase = 2.58
       ret.steerRatio = 15.6

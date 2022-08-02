@@ -24,11 +24,13 @@ class CarController():
     self.packer_pt = CANPacker(DBC_FILES.mqb)
 
     if CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.volkswagen:
+      print(">>> carcontroller.py: safety model is MQB (volkswagen)")
       self.packer_pt = CANPacker(DBC_FILES.mqb)
       self.create_steering_control = volkswagencan.create_mqb_steering_control
       self.create_acc_buttons_control = volkswagencan.create_mqb_acc_buttons_control
       self.create_hud_control = volkswagencan.create_mqb_hud_control
     elif CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.volkswagenPq:
+      print(">>> carcontroller.py: safety model is PQ (volkswagen)")
       self.packer_pt = CANPacker(DBC_FILES.pq46)
       self.create_steering_control = volkswagencan.create_pq_steering_control
 #      self.create_acc_buttons_control = volkswagencan.create_pq_acc_buttons_control
