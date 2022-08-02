@@ -93,16 +93,27 @@ static void send_fake_message(uint32_t RIR, uint32_t RDTR,int msg_len, int msg_a
 
 static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, uint8_t bus_num, uint32_t data_lo, uint32_t data_hi) {
   CANPacket_t to_send;
-  UNUSED(received);
-UNUSED(msg_len);
-UNUSED(msg_addr);
-UNUSED(data_lo);
-UNUSED(data_hi);
+  to_send.reserved = received->reserved;
+  to_send.bus = bus_num;
+  to_send.data_len_code = msg_len;
+  to_send.rejected = received->rejected;
+  to_send.returned = received->returned;
+  to_send.extended = received->extended;
+  to_send.addr = msg_addr;
+  to_send.data[0] = ( data_lo & 0xFF );
+  to_send.data[1] = ( (data_lo>>8) & 0xFF );
+  to_send.data[2] = ( (data_lo>>18) & 0xFF );
+  to_send.data[3] = ( (data_lo>>24) & 0xFF );
+  to_send.data[4] = ( data_hi & 0xFF );
+  to_send.data[5] = ( (data_hi>>8) & 0xFF );
+  to_send.data[6] = ( (data_hi>>18) & 0xFF );
+  to_send.data[7] = ( (data_hi>>24) & 0xFF );
+
 
 /*
   uint32_t addr_mask = 0x001FFFFF;
-  to_send.RIR = (msg_addr << 21) + (addr_mask & (RIR | 1));
-  to_send.RDTR = (RDTR & 0xFFFFFFF0) | msg_len;
+  to_send.RIR = (msg_addr << 21) + (addr_mask & (RIR | 1));   // <<21 = std_id
+  to_send.RDTR = (RDTR & 0xFFFFFFF0) | msg_len; // ? dlc only?
   to_send.RDLR = data_lo;
   to_send.RDHR = data_hi;
 */
