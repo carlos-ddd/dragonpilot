@@ -46,11 +46,14 @@ class CarController():
 
     self.steer_rate_limited = False
 
+
   def update(self, c, enabled, CS, frame, ext_bus, actuators, visual_alert, left_lane_visible, right_lane_visible, left_lane_depart, right_lane_depart, dragonconf):
     """ Controls thread """
 
     # Send CAN commands.
     can_sends = []
+
+    print("\n", "carcontroller.py::update()", str(dir(P)),"\n")
 
     #--------------------------------------------------------------------------
     #                                                                         #
