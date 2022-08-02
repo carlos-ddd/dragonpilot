@@ -229,6 +229,7 @@ class RadarInterface(RadarInterfaceBase):
                     self.extPts[message].movingState = cpt2["MovingState"]
                     self.extPts[message].length = cpt2["Length"]
                     self.extPts[message].obstacleProb = cpt["ProbObstacle"]
+                    print("\n", "radar_interface.py::_update()", self.rcp.vl_all[message + 1]["Index2"])
                     self.extPts[message].timeStamp = int(
                         self.rcp.vl_all[message + 1]["Index2"]
                     )
