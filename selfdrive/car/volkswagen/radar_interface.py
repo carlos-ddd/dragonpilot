@@ -59,28 +59,28 @@ def _create_radard_can_parser():
             + ["dZ"] * msg_b_n
             + ["MovingState"] * msg_b_n,
             RADAR_A_MSGS * 10 + RADAR_B_MSGS * 7,
-            [255.0] * msg_a_n
-            + [0.0] * msg_a_n
-            + [0.0] * msg_a_n
-            + [0.0] * msg_a_n
-            + [0] * msg_a_n
-            + [0] * msg_a_n
-            + [0] * msg_a_n
-            + [0.0] * msg_a_n
-            + [0] * msg_a_n
-            + [0.0] * msg_a_n
-            + [0.0] * msg_b_n
-            + [0] * msg_b_n
-            + [0] * msg_b_n
-            + [0.0] * msg_b_n
-            + [0.0] * msg_b_n
-            + [0.0] * msg_b_n
-            + [0] * msg_b_n,
+            #[255.0] * msg_a_n
+            #+ [0.0] * msg_a_n
+            #+ [0.0] * msg_a_n
+            #+ [0.0] * msg_a_n
+            #+ [0] * msg_a_n
+            #+ [0] * msg_a_n
+            #+ [0] * msg_a_n
+            #+ [0.0] * msg_a_n
+            #+ [0] * msg_a_n
+            #+ [0.0] * msg_a_n
+            #+ [0.0] * msg_b_n
+            #+ [0] * msg_b_n
+            #+ [0] * msg_b_n
+            #+ [0.0] * msg_b_n
+            #+ [0.0] * msg_b_n
+            #+ [0.0] * msg_b_n
+            #+ [0] * msg_b_n,
         )
     )
 
     checks = list(zip(RADAR_A_MSGS + RADAR_B_MSGS, [6] * (msg_a_n + msg_b_n)))
-    print("radar_interface calling CANParser", os.path.splitext(dbc_f)[0].encode("utf8"), signals, checks, 2)
+    print("\n", radar_interface calling CANParser", os.path.splitext(dbc_f)[0].encode("utf8"), signals, checks, 2)
     return CANParser(os.path.splitext(dbc_f)[0].encode("utf8"), signals, checks, 2)
 
 
