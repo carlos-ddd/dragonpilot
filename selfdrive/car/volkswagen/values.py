@@ -32,6 +32,21 @@ class CarControllerParams:
   STEER_DRIVER_MULTIPLIER = 3    # weight driver torque heavily
   STEER_DRIVER_FACTOR = 1        # from dbc
 
+  # START following block taken from Edgy
+  # not clear what is being used ... atm ...
+  # pedal lookups, only for Volt
+  MAX_GAS = 1250
+  BREAK_POINT = 530
+  ZERO_GAS = 227
+  MAX_BRAKE = 350  # Should be around 3.5m/s^2, including regen
+  GAS_LOOKUP_BP = [-0.42735, 0., 2.]
+  GAS_LOOKUP_V = [ZERO_GAS, 530, MAX_GAS]
+  BRAKE_LOOKUP_BP = [-3.5, -0.]
+  BRAKE_LOOKUP_V = [-3.5, -0.]
+  COASTING_LOOKUP_BP = [0., 8.3]
+  COASTING_LOOKUP_V = [0., -0.42735]
+  # END following block taken from Edgy
+
 class CANBUS:
   pt = 0
   br = 1

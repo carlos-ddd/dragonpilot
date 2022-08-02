@@ -19,6 +19,8 @@ class CarController():
     self.mobEnabled = False
     self.radarVin_idx = 0
 
+    self.coastingAccel = -0.42735
+
     self.packer_pt = CANPacker(DBC_FILES.mqb)
 
     if CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.volkswagen:
@@ -297,8 +299,45 @@ class CarController():
     # --------------------------------------------------------------------------
     if (frame % P.GAS_STEP == 0) and CS.CP.enableGasInterceptor:
       apply_gas = 0
+
+      self.coastingAccel = interp(CS.out.vEgo, P.COASTING_LOOKUP_BP, P.COASTING_LOOKUP_V)   # new Edgy
+
       if enabled and not CS.out.clutchPressed:
-        apply_gas = clip(actuators.gas, 0., 1.)
+
+        #apply_gas = clip(actuators.gas, 0., 1.)     # old v0.8.2
+
+        # BEGIN new Edgy
+        if actuators.accel > self.coastingAccel:
+          speed = CS.out.vEgo
+          cd = 0.31
+          frontalArea = 2.3
+          drag = 0.5 * cd * frontalArea * (speed ** 2)
+
+          mass = 1250
+          g = 9.81
+          rollingFrictionCoefficient = 0.02
+          friction = mass * g * rollingFrictionCoefficient
+
+          desiredAcceleration = actuators.accel
+          acceleration = mass * desiredAcceleration
+
+          driveTrainLosses = 0  # 600 for the engine, 200 for trans, low speed estimate
+          powerNeeded = (drag + friction + acceleration) * speed + driveTrainLosses
+          POWER_LOOKUP_BP = [0, 25000 * 1.6 / 2.6,
+                               75000]  # 160NM@1500rpm=25kW but with boost, no boost means *1.6/2.6
+          PEDAL_LOOKUP_BP = [227, 1250 * 0.4,
+                               1250 * 100 / 140]  # Not max gas, max gas gives 140hp, we want at most 100 hp, also 40% throttle might prevent an upshift
+
+          GAS_MULTIPLIER_BP = [0, 0.1, 0.2, 0.4, 8.3]
+          GAS_MULTIPLIER_V = [1.15, 1.15, 1.2, 1.25, 1.]
+
+          powerNeeded_mult = interp(CS.out.vEgo, [20 / 3.6, 40 / 3.6], [2, 1])
+          powerNeeded = int(round(powerNeeded * powerNeeded_mult))
+          apply_gas = int(round(interp(powerNeeded, POWER_LOOKUP_BP, PEDAL_LOOKUP_BP)))
+          apply_gas = int(round(apply_gas * int(round(interp(speed, GAS_MULTIPLIER_BP, GAS_MULTIPLIER_V)))))
+        else:
+          apply_gas = 0
+        # END new Edgy
 
       can_sends.append(self.create_gas_control(self.packer_pt, CANBUS.cam, apply_gas, frame // 2))
 
