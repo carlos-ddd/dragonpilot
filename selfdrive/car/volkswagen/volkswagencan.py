@@ -1,7 +1,9 @@
 # CAN controls for MQB platform Volkswagen, Audi, Skoda and SEAT.
 # PQ35/PQ46/NMS, and any future MLB, to come later.
 
-from selfdrive.car import crc8_pedal
+import struct
+from ctypes import create_string_buffer     # tesla radar VIN
+from selfdrive.car import crc8_pedal        # pedal
 
 def create_mqb_steering_control(packer, bus, apply_steer, idx, lkas_enabled):
   values = {
