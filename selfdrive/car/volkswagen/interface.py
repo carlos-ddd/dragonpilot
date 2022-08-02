@@ -290,6 +290,7 @@ class CarInterface(CarInterfaceBase):
     hud_control = c.hudControl
     ret = self.CC.update(c, c.enabled, self.CS, self.frame, self.ext_bus, c.actuators,
                          hud_control.visualAlert,
+                         hud_control.audibleAlert,
                          hud_control.leftLaneVisible,
                          hud_control.rightLaneVisible,
                          hud_control.leftLaneDepart,
