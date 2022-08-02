@@ -242,14 +242,14 @@ static int volkswagen_pq_tx_hook(CANPacket_t *to_send) {
 
  if (addr == MSG_TESLA_VIN) {
 
-   int id = (GET_MAILBOX_BYTES_04(to_send) & 0xFF);
-   int radarVin_b1 = ((GET_MAILBOX_BYTES_04(to_send) >> 8) & 0xFF);
-   int radarVin_b2 = ((GET_MAILBOX_BYTES_04(to_send) >> 16) & 0xFF);
-   int radarVin_b3 = ((GET_MAILBOX_BYTES_04(to_send) >> 24) & 0xFF);
-   int radarVin_b4 = (GET_MAILBOX_BYTES_48(to_send) & 0xFF);
-   int radarVin_b5 = ((GET_MAILBOX_BYTES_48(to_send) >> 8) & 0xFF);
-   int radarVin_b6 = ((GET_MAILBOX_BYTES_48(to_send) >> 16) & 0xFF);
-   int radarVin_b7 = ((GET_MAILBOX_BYTES_48(to_send) >> 24) & 0xFF);
+   int id = ( GET_BYTE(to_send, 0) );
+   int radarVin_b1 = ( GET_BYTE(to_send, 1) );
+   int radarVin_b2 = ( GET_BYTE(to_send, 2) );
+   int radarVin_b3 = ( GET_BYTE(to_send, 3) );
+   int radarVin_b4 = ( GET_BYTE(to_send, 4) );
+   int radarVin_b5 = ( GET_BYTE(to_send, 5) );
+   int radarVin_b6 = ( GET_BYTE(to_send, 6) );
+   int radarVin_b7 = ( GET_BYTE(to_send, 7) );
    if (id == 0) {
      tesla_radar_should_send = (radarVin_b2 & 0x01);
      radarPosition =  ((radarVin_b2 >> 1) & 0x03);
