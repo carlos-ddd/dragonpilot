@@ -92,7 +92,7 @@ static int volkswagen_pq_rx_hook(CANPacket_t *to_push) {
 
   bool valid = addr_safety_check(to_push, &volkswagen_pq_rx_checks,
                                 volkswagen_pq_get_checksum, volkswagen_pq_compute_checksum, volkswagen_pq_get_counter);
-//  teslaradar_rx_hook(to_push);
+  //teslaradar_rx_hook(to_push);
 
   if (valid && (GET_BUS(to_push) == 0U)) {
     int addr = GET_ADDR(to_push);
@@ -239,7 +239,7 @@ static int volkswagen_pq_tx_hook(CANPacket_t *to_send) {
  // Tesla Radar TX hook
  //check if this is a teslaradar vin message
  //capture message for radarVIN and settings
-/*
+
  if (addr == MSG_TESLA_VIN) {
    int id = (to_send->RDLR & 0xFF);
    int radarVin_b1 = ((to_send->RDLR >> 8) & 0xFF);
@@ -284,7 +284,7 @@ static int volkswagen_pq_tx_hook(CANPacket_t *to_send) {
       return 0;
     }
   }
-*/
+
   // GAS PEDAL: safety check
   if (addr == MSG_GAS_COMMAND) {
     if (!controls_allowed) {
