@@ -241,6 +241,7 @@ static int volkswagen_pq_tx_hook(CANPacket_t *to_send) {
  //capture message for radarVIN and settings
 
  if (addr == MSG_TESLA_VIN) {
+
    int id = (GET_MAILBOX_BYTES_04(to_send) & 0xFF);
    int radarVin_b1 = ((GET_MAILBOX_BYTES_04(to_send) >> 8) & 0xFF);
    int radarVin_b2 = ((GET_MAILBOX_BYTES_04(to_send) >> 16) & 0xFF);
