@@ -243,17 +243,29 @@ class CarController():
         #if CS.out.cruiseState.available:
         lead_distance = 0
 
-        # none
-        # chimeEngage
-        # chimeDisengage
-        # chimeError
-        # chimePrompt 
-        # chimeWarning1
-        # chimeWarning2
-        # chimeWarning2Repeat
-        # chimeWarningRepeat
-        ledbar_info = (audible_alert == car.CarControl.HUDControl.AudibleAlert.chimePrompt) or (audible_alert == car.CarControl.HUDControl.AudibleAlert.chimeWarning2Repeat) 
-        ledbar_warn = (audible_alert == car.CarControl.HUDControl.AudibleAlert.chimeWarningRepeat) or (audible_alert == car.CarControl.HUDControl.AudibleAlert.chimeWarning1)
+        #AudibleAlert (defined in cereal/car.capnp)
+        #none
+        #engage
+        #disengage
+        #refuse
+        #warningSoft
+        #warningImmediate
+        #prompt
+        #promptRepeat
+        #promptDistracted
+    
+        #VisualAlert (defined in cereal/car.capnp)
+        #none
+        #fcw
+        #steerRequired
+        #brakePressed
+        #wrongGear
+        #seatbeltUnbuckled
+        #speedTooHigh
+        #ldw
+   
+        ledbar_info = (audible_alert == car.CarControl.HUDControl.AudibleAlert.prompt) or (audible_alert == car.CarControl.HUDControl.AudibleAlert.promptRepeat) 
+        ledbar_warn = (audible_alert == car.CarControl.HUDControl.AudibleAlert.warningSoft) or (audible_alert == car.CarControl.HUDControl.AudibleAlert.warningImmediate)
         ledbar_max = False
         
         ledbar_val = 0
