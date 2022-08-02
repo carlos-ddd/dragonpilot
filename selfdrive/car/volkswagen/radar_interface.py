@@ -229,10 +229,7 @@ class RadarInterface(RadarInterfaceBase):
                     self.extPts[message].movingState = cpt2["MovingState"]
                     self.extPts[message].length = cpt2["Length"]
                     self.extPts[message].obstacleProb = cpt["ProbObstacle"]
-                    self.extPts[message].timeStamp = int(
-                        #self.rcp.ts[message + 1]["Index2"] # old, invalid due to new can parser, removing .ts member
-                        0
-                    )
+                    self.extPts[message].timeStamp = 0 # int(self.rcp.ts[message + 1]["Index2"] )# old, invalid due to new can parser, removing .ts member (https://github.com/commaai/opendbc/pull/557 or comma-commit 6770f1cdfb7b1017e7cdcb79aceced6ed530584e)
                     if cpt2["ProbClass"] >= CLASS_MIN_PROBABILITY:
                         self.extPts[message].objectClass = cpt2["Class"]
                         # for now we will use class 0- unknown stuff to show trucks
