@@ -1,6 +1,7 @@
 #include "dlc_to_len.h"
 
 #define CAN_PACKET_VERSION 2
+// see https://github.com/commaai/panda/blob/ae26b75d7bac3d57b060f9fdc48b591fa23e0a25/CANPacket_structure.png
 typedef struct {
   unsigned char reserved : 1;
   unsigned char bus : 3;

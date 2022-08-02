@@ -77,8 +77,9 @@ static int add_tesla_cksm2(uint32_t dl, uint32_t dh, int msg_id, int msg_len) {
   return add_tesla_cksm(&to_check,msg_id,msg_len);
 }
 
-void can_send(CAN_FIFOMailBox_TypeDef *to_push, uint8_t bus_number, bool skip_tx_hook);
+void can_send(CANPacket_t *to_push, uint8_t bus_number, bool skip_tx_hook);
 
+/*
 static void send_fake_message(uint32_t RIR, uint32_t RDTR,int msg_len, int msg_addr, uint8_t bus_num, uint32_t data_lo, uint32_t data_hi) {
   CAN_FIFOMailBox_TypeDef to_send;
   uint32_t addr_mask = 0x001FFFFF;
@@ -88,12 +89,26 @@ static void send_fake_message(uint32_t RIR, uint32_t RDTR,int msg_len, int msg_a
   to_send.RDHR = data_hi;
   can_send(&to_send, bus_num, true);
 }
+*/
+
+static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, uint8_t bus_num, uint32_t data_lo, uint32_t data_hi) {
+  CANPacket_t to_send;
+/*
+  uint32_t addr_mask = 0x001FFFFF;
+  to_send.RIR = (msg_addr << 21) + (addr_mask & (RIR | 1));
+  to_send.RDTR = (RDTR & 0xFFFFFFF0) | msg_len;
+  to_send.RDLR = data_lo;
+  to_send.RDHR = data_hi;
+*/
+  can_send(&to_send, bus_num, true);
+}
 
 static uint32_t radar_VIN_char(int pos, int shift) {
   return (((int)radar_VIN[pos]) << (shift * 8));
 }
 
-static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
+//static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
+static void activate_tesla_radar(CANPacket_t *received) {
     //if we did not receive the VIN or no request to activate radar, then return
     if ((tesla_radar_vin_complete != 7) || (tesla_radar_should_send == 0)) {
         return;
@@ -108,7 +123,7 @@ static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
     MHB = MHB +(crc << 24);
     tesla_radar_x199_id++;
     tesla_radar_x199_id = tesla_radar_x199_id % 16;
-    send_fake_message(RIR,RDTR,8,0x199,tesla_radar_can,MLB,MHB);
+    send_fake_message(received,8,0x199,tesla_radar_can,MLB,MHB);
     //send 169
     int speed_kph = (int)(actual_speed_kph/0.04) & 0x1FFF;
     MLB = (speed_kph | (speed_kph << 13) | (speed_kph << 26)) & 0xFFFFFFFF;
@@ -117,7 +132,7 @@ static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
     MHB = MHB + (cksm << 24);
     tesla_radar_x169_id++;
     tesla_radar_x169_id = tesla_radar_x169_id % 16;
-    send_fake_message(RIR,RDTR,8,0x169,tesla_radar_can,MLB,MHB);
+    send_fake_message(received,8,0x169,tesla_radar_can,MLB,MHB);
     //send 119
     MLB = 0x11F41FFF;
     MHB = 0x00000080 + tesla_radar_x119_id;
@@ -125,7 +140,7 @@ static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
     MHB = MHB + (cksm << 8);
     tesla_radar_x119_id++;
     tesla_radar_x119_id = tesla_radar_x119_id % 16;
-    send_fake_message(RIR,RDTR,6,0x119,tesla_radar_can,MLB,MHB);
+    send_fake_message(received,6,0x119,tesla_radar_can,MLB,MHB);
     //send 109
     MLB = 0x80000000 + (tesla_radar_x109_id << 13);
     MHB = 0x00;
@@ -133,7 +148,7 @@ static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
     MHB = MHB + (cksm << 24);
     tesla_radar_x109_id++;
     tesla_radar_x109_id = tesla_radar_x109_id % 8;
-    send_fake_message(RIR,RDTR,8,0x109,tesla_radar_can,MLB,MHB);
+    send_fake_message(received,8,0x109,tesla_radar_can,MLB,MHB);
     //send all messages at 50Hz
     if (tesla_radar_counter % 2 ==0) {
         //send 159
@@ -143,7 +158,7 @@ static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
         MLB = MLB +(cksm << 24);
         tesla_radar_x159_id++;
         tesla_radar_x159_id = tesla_radar_x159_id % 16;
-        send_fake_message(RIR,RDTR,8,0x159,tesla_radar_can,MLB,MHB);
+        send_fake_message(received,8,0x159,tesla_radar_can,MLB,MHB);
         //send 149
         MLB = 0x6A022600;
         MHB = 0x000F04AA + (tesla_radar_x149_id << 20);
@@ -151,7 +166,7 @@ static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
         MHB = MHB +(cksm << 24);
         tesla_radar_x149_id++;
         tesla_radar_x149_id = tesla_radar_x149_id % 16;
-        send_fake_message(RIR,RDTR,8,0x149,tesla_radar_can,MLB,MHB);
+        send_fake_message(received,8,0x149,tesla_radar_can,MLB,MHB);
         //send 129
         MLB = 0x20000000;
         MHB = 0x00 + (tesla_radar_x129_id << 4);
@@ -159,7 +174,7 @@ static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
         MHB = MHB +(cksm << 8);
         tesla_radar_x129_id++;
         tesla_radar_x129_id = tesla_radar_x129_id % 16;
-        send_fake_message(RIR,RDTR,6,0x129,tesla_radar_can,MLB,MHB);
+        send_fake_message(received,6,0x129,tesla_radar_can,MLB,MHB);
         //send 1A9
         MLB = 0x000C0000 + (tesla_radar_x1A9_id << 28);
         MHB = 0x00;
@@ -167,14 +182,14 @@ static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
         MHB = MHB + cksm;
         tesla_radar_x1A9_id++;
         tesla_radar_x1A9_id = tesla_radar_x1A9_id % 16;
-        send_fake_message(RIR,RDTR,5,0x1A9,tesla_radar_can,MLB,MHB);
+        send_fake_message(received,5,0x1A9,tesla_radar_can,MLB,MHB);
     }
     //send all messages at 10Hz
     if (tesla_radar_counter % 10 ==0) {
         //send 209
         MLB = 0x5294FF00;
         MHB = 0x00800313;
-        send_fake_message(RIR,RDTR,8,0x209,tesla_radar_can,MLB,MHB);
+        send_fake_message(received,8,0x209,tesla_radar_can,MLB,MHB);
         //send 219
         MLB = 0x00000000;
         MHB = 0x00000000;
@@ -183,7 +198,7 @@ static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
         MHB = MHB +(crc << 24);
         tesla_radar_x219_id++;
         tesla_radar_x219_id = tesla_radar_x219_id % 16;
-        send_fake_message(RIR,RDTR,8,0x219,tesla_radar_can,MLB,MHB);
+        send_fake_message(received,8,0x219,tesla_radar_can,MLB,MHB);
     }
     //send all messages at 4Hz
     if (tesla_radar_counter % 25 ==0) {
@@ -203,7 +218,7 @@ static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
         }
         tesla_radar_x2B9_id++;
         tesla_radar_x2B9_id = tesla_radar_x2B9_id % 3;
-        send_fake_message(RIR,RDTR,8,0x2B9,tesla_radar_can,MLB,MHB);
+        send_fake_message(received,8,0x2B9,tesla_radar_can,MLB,MHB);
     }
     //send all messages at 1Hz
     if (tesla_radar_counter ==0) {
@@ -214,11 +229,11 @@ static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
             //also change to AWD if needed (most likely) if manual VIN and if position 8 of VIN is a 2 (dual motor)
             MLB = MLB | 0x08;
         }
-        send_fake_message(RIR,RDTR,8,0x2A9,tesla_radar_can,MLB,MHB);
+        send_fake_message(received,8,0x2A9,tesla_radar_can,MLB,MHB);
         //send 2D9
         MLB = 0x00834080;
         MHB = 0x00000000;
-        send_fake_message(RIR,RDTR,8,0x2D9,tesla_radar_can,MLB,MHB);
+        send_fake_message(received,8,0x2D9,tesla_radar_can,MLB,MHB);
     }
     tesla_radar_counter++;
     tesla_radar_counter = tesla_radar_counter % 100;
@@ -227,9 +242,18 @@ static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
 static void teslaradar_rx_hook(CANPacket_t *to_push)
 {
   uint8_t bus_number = GET_BUS(to_push);
+
+/*
+ * explatination of of RIR, TIR, RDTR, TDTR
+ * STM32F4 reference manual p. 1108
+ * RIR: RTR (remote), IDE(std/ext), addr(std/ext)
+ * RDTR: DLC, transmit global time (potentially INOP)
+ */
+
+/*
   uint32_t addr;
 
-  if (to_push->RIR & 4)
+  if (to_push->RIR & 4)     // 4 = 0b100 = Bit3
   {
     // Extended
     // Not looked at, but have to be separated
@@ -241,9 +265,13 @@ static void teslaradar_rx_hook(CANPacket_t *to_push)
     // Normal
     addr = to_push->RIR >> 21;
   }
+*/
+   uint32_t addr = GET_ADDR(to_push);
+
 
   if ((addr == tesla_radar_trigger_message_id) && (bus_number == 1) && (tesla_radar_trigger_message_id > 0)) {
-    activate_tesla_radar(to_push->RIR,to_push->RDTR);
+    //activate_tesla_radar(to_push->RIR,to_push->RDTR);
+    activate_tesla_radar(to_push);
     return;
   }
 
