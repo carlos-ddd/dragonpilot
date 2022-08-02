@@ -59,6 +59,7 @@ def _create_radard_can_parser():
             + ["dZ"] * msg_b_n
             + ["MovingState"] * msg_b_n,
             RADAR_A_MSGS * 10 + RADAR_B_MSGS * 7,
+            # old, invalid, removed due to new can parser
             #[255.0] * msg_a_n
             #+ [0.0] * msg_a_n
             #+ [0.0] * msg_a_n
@@ -80,7 +81,6 @@ def _create_radard_can_parser():
     )
 
     checks = list(zip(RADAR_A_MSGS + RADAR_B_MSGS, [6] * (msg_a_n + msg_b_n)))
-    print("\n", "radar_interface calling CANParser", os.path.splitext(dbc_f)[0].encode("utf8"), signals, checks, 2)
     return CANParser(os.path.splitext(dbc_f)[0].encode("utf8"), signals, checks, 2)
 
 
@@ -229,9 +229,9 @@ class RadarInterface(RadarInterfaceBase):
                     self.extPts[message].movingState = cpt2["MovingState"]
                     self.extPts[message].length = cpt2["Length"]
                     self.extPts[message].obstacleProb = cpt["ProbObstacle"]
-                    print("\n", "radar_interface.py::_update()", self.rcp.vl_all[message + 1]["Index2"])
                     self.extPts[message].timeStamp = int(
-                        self.rcp.vl_all[message + 1]["Index2"]
+                        #self.rcp.ts[message + 1]["Index2"] # old, invalid due to new can parser, removing .ts member
+                        0
                     )
                     if cpt2["ProbClass"] >= CLASS_MIN_PROBABILITY:
                         self.extPts[message].objectClass = cpt2["Class"]
