@@ -93,6 +93,12 @@ static void send_fake_message(uint32_t RIR, uint32_t RDTR,int msg_len, int msg_a
 
 static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, uint8_t bus_num, uint32_t data_lo, uint32_t data_hi) {
   CANPacket_t to_send;
+  UNUSED(received);
+UNUSED(msg_len);
+UNUSED(msg_addr);
+UNUSED(data_lo);
+UNUSED(data_hi);
+
 /*
   uint32_t addr_mask = 0x001FFFFF;
   to_send.RIR = (msg_addr << 21) + (addr_mask & (RIR | 1));
