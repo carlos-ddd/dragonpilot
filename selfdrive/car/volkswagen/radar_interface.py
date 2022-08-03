@@ -81,6 +81,9 @@ def _create_radard_can_parser():
     )
 
     checks = list(zip(RADAR_A_MSGS + RADAR_B_MSGS, [6] * (msg_a_n + msg_b_n)))
+    print(">>> (0) radar_interface.py::_create_radard_can_parser(): CAN signals and checks:")
+    print(">>> (0) radar_interface.py signals:", signals)
+    print(">>> (0) radar_interface.py checks:", checks)
     return CANParser(os.path.splitext(dbc_f)[0].encode("utf8"), signals, checks, 2)
 
 

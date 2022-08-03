@@ -16,7 +16,7 @@ class CarState(CarStateBase):
 	  ### START OF MAIN CONFIG OPTIONS ###
     ### Do NOT modify here, modify in /data/bb_openpilot.cfg and reboot
     self.useTeslaRadar = CP.enableGasInterceptor
-    print(">>> carstate.py::useTeslaRadar:", self.useTeslaRadar)
+    print(">>> (0) carstate.py::useTeslaRadar:", self.useTeslaRadar)
     self.radarVIN = "5YJSB7E17HF207544" # carlos_ddd
     self.radarOffset = 0.
     self.radarPosition = 1
@@ -29,22 +29,22 @@ class CarState(CarStateBase):
       self.get_can_parser = self.get_pq_can_parser
       self.get_cam_can_parser = self.get_pq_cam_can_parser
       self.update = self.update_pq
-      print(">>> carstate.py: safety model PQ")
+      print(">>>  (1) carstate.py: safety model PQ")
 
       if CP.transmissionType == TransmissionType.automatic:
         self.shifter_values = can_define.dv["Getriebe_1"]['Waehlhebelposition__Getriebe_1_']
-        print(">>> carstate.py: automatic gear detected")
+        print(">>> (2) carstate.py: automatic gear detected")
       elif CP.transmissionType == TransmissionType.manual:
-        print(">>> carstate.py: manual gear detected")
+        print(">>> (2) carstate.py: manual gear detected")
 
       if CP.enableGasInterceptor:
-        print(">>> carstate.py: enableGasInterceptor is true")
+        print(">>> (3) carstate.py: enableGasInterceptor is true")
         self.openpilot_enabled = False
       else:
-        print(">>> carstate.py: enableGasInterceptor is false!")
+        print(">>> (3) carstate.py: enableGasInterceptor is false!")
 
     else:
-      print(">>> carstate.py: safety model MQB")
+      print(">>> (1) carstate.py: safety model MQB")
       can_define = CANDefine(DBC_FILES.mqb)
 
       self.get_can_parser = self.get_mqb_can_parser
@@ -505,27 +505,27 @@ class CarState(CarStateBase):
     if CP.transmissionType == TransmissionType.automatic:
       signals += [("Waehlhebelposition__Getriebe_1_", "Getriebe_1")]  # Auto trans gear selector position
       checks += [("Getriebe_1", 100)]  # From J743 Auto transmission control module
-      print(">>> carstate.py: CAN checks for automatic transmission added!")
+      print(">>> (4) carstate.py: CAN checks for automatic transmission added!")
     elif CP.transmissionType == TransmissionType.manual:
       signals += [("Kupplungsschalter", "Motor_1"),  # Clutch switch
                   ("GK1_Rueckfahr", "Gate_Komf_1")]  # Reverse light from BCM
       checks += [("Motor_1", 100)]  # From J623 Engine control module
 #      checks += [("Getriebe_2", 100)]  # From J623 Engine control module (due to manual shift, there is no TCU so ECU emits it)
-      print(">>> carstate.py: CAN checks for manual transmission added!")
+      print(">>> (4) carstate.py: CAN checks for manual transmission added!")
 
     if CP.networkLocation == NetworkLocation.fwdCamera:
       # The ACC radar is here on CANBUS.pt
       signals += [("ACA_V_Wunsch", "ACC_GRA_Anziege")]  # ACC set speed
       checks += [("ACC_GRA_Anziege", 25)]  # From J428 ACC radar control module
-      print(">>> carstate.py: CAN checks for NetworkLocation.fwdCamera added!")
+      print(">>> (5) carstate.py: CAN checks for NetworkLocation.fwdCamera added!")
 
       if CP.enableBsm:
         signals += PqExtraSignals.bsm_radar_signals
         checks += PqExtraSignals.bsm_radar_checks
-        print(">>> carstate.py: CAN checks for blindspot added!")
+        print(">>> (6) carstate.py: CAN checks for blindspot added!")
 
     #checks = []
-    print(">>> carstate.py: CAN checks and signals:")
+    print(">>> (7) carstate.py: CAN checks and signals:")
     print(">>> carstate.py::pq::signals", signals)
     print(">>> carstate.py::pq::checks", checks)
     return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.pt, False)
@@ -566,22 +566,22 @@ class CarState(CarStateBase):
     checks = []
 
     if CP.networkLocation == NetworkLocation.gateway:
-      print(">>> carstate.py::get_pq_cam_can_parser(): network location gateway confirmed!")
+      print(">>> (8) carstate.py::get_pq_cam_can_parser(): network location gateway confirmed!")
       # The ACC radar is here on CANBUS.cam
       signals += [("ACA_V_Wunsch", "ACC_GRA_Anziege")]  # ACC set speed
       checks += [("ACC_GRA_Anziege", 25)]  # From J428 ACC radar control module
       if CP.enableBsm:
-        print(">>> carstate.py::get_pq_cam_can_parser(): blindspot enabled (gateway) checks added")
+        print(">>> (9) carstate.py::get_pq_cam_can_parser(): blindspot enabled (gateway) checks added")
         signals += PqExtraSignals.bsm_radar_signals
         checks += PqExtraSignals.bsm_radar_checks
 
     if CP.enableGasInterceptor:
-      print(">>> carstate.py::get_pq_cam_can_parser(): enableGasInterceptor, checks added ")
+      print(">>> (10) carstate.py::get_pq_cam_can_parser(): enableGasInterceptor, checks added ")
       signals += [("INTERCEPTOR_GAS", "GAS_SENSOR", 0), ("INTERCEPTOR_GAS2", "GAS_SENSOR", 0)]
       checks += [("GAS_SENSOR", 50)]
 
     #checks = []
-    print(">>> carstate.py::get_pq_cam_can_parser(): CAN checks and signals (get_pq_cam_can_parser()):")
+    print(">>> (11) carstate.py::get_pq_cam_can_parser(): CAN checks and signals (get_pq_cam_can_parser()):")
     print(">>> carstate.py::pq::signals", signals)
     print(">>> carstate.py::pq::checks", checks)
     return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.cam, False)
