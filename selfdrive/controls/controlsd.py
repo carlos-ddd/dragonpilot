@@ -277,13 +277,16 @@ class Controls:
 
       if safety_mismatch or self.mismatch_counter >= 200:
         self.events.add(EventName.controlsMismatch)
+        print(">>> selfdrive/controls/controlsd.py: controls mismatch: safety_mismatch", safety_mismatch, "mismatch_counter", self.mismatch_counter)
 
       if log.PandaState.FaultType.relayMalfunction in pandaState.faults:
         self.events.add(EventName.relayMalfunction)
+        print(">>> selfdrive/controls/controlsd.py: relayMalfunction")
 
     # Check for HW or system issues
     if len(self.sm['radarState'].radarErrors):
       self.events.add(EventName.radarFault)
+      print(">>> selfdrive/controls/controlsd.py: radarFault")
     elif not self.sm.valid["pandaStates"]:
       self.events.add(EventName.usbError)
     elif not self.dp_jetson and not self.sm.all_alive_and_valid() or self.can_rcv_error:
@@ -314,6 +317,7 @@ class Controls:
       self.cruise_mismatch_counter = self.cruise_mismatch_counter + 1 if cruise_mismatch else 0
       if self.cruise_mismatch_counter > int(3. / DT_CTRL):
         self.events.add(EventName.cruiseMismatch)
+        print(">>> selfdrive/controls/controlsd.py: cruiseMismatch")
 
     # Check for FCW
     stock_long_is_braking = self.enabled and not self.CP.openpilotLongitudinalControl and CS.aEgo < -1.5

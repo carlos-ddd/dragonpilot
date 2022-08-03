@@ -45,8 +45,7 @@ const int VOLKSWAGEN_GAS_INTERCEPTOR_THRSLD = 475;  // ratio between offset and 
 
 // Transmit of GRA_Neu is allowed on bus 0 and 2 to keep compatibility with gateway and camera integration
 // carlos_ddd: bus number, dlc ???
-//const CanMsg VOLKSWAGEN_PQ_TX_MSGS[] = { {MSG_HCA_1, 0, 5}, {MSG_GRA_NEU, 0, 4}, {MSG_GRA_NEU, 1, 4}, {MSG_GRA_NEU, 2, 4}, {MSG_LDW_1, 0, 8}, {MSG_MOB_1, 1, 6}, {MSG_GAS_COMMAND, 2, 6}, {MSG_AWV_1, 0, 5}, {MSG_ACA, 0, 8} };
-const CanMsg VOLKSWAGEN_PQ_TX_MSGS[] = { {MSG_HCA_1, 0, 5}, {MSG_GRA_NEU, 0, 4}, {MSG_GRA_NEU, 1, 4}, {MSG_GRA_NEU, 2, 4}, {MSG_LDW_1, 0, 8}, {MSG_MOB_1, 1, 6}, {MSG_GAS_COMMAND, 2, 6}, {MSG_AWV_1, 0, 5}, {MSG_OPSTA, 1, 8} };
+const CanMsg VOLKSWAGEN_PQ_TX_MSGS[] = { {MSG_HCA_1, 0, 5}, {MSG_GRA_NEU, 0, 4}, {MSG_GRA_NEU, 1, 4}, {MSG_GRA_NEU, 2, 4}, {MSG_LDW_1, 0, 8}, {MSG_MOB_1, 1, 6}, {MSG_GAS_COMMAND, 2, 6}, {MSG_AWV_1, 0, 5}, {MSG_OPSTA, 1, 8} }; //{MSG_ACA, 0, 8}
 #define VOLKSWAGEN_PQ_TX_MSGS_LEN (sizeof(VOLKSWAGEN_PQ_TX_MSGS) / sizeof(VOLKSWAGEN_PQ_TX_MSGS[0]))
 
 AddrCheckStruct volkswagen_pq_addr_checks[] = {
@@ -117,10 +116,25 @@ static int volkswagen_pq_rx_hook(CANPacket_t *to_push) {
       update_sample(&torque_driver, torque_driver_new);
     }
 
-/*
-    // Enter controls on rising edge of stock ACC, exit controls if stock ACC disengages
+    // Gasinterceptor detection and control allowance 
+    // Generally allow controls if gas interceptor is detected unless gas pressed
+    // Exit controls on rising edge of interceptor gas press
+    if ( (addr == MSG_GAS_SENSOR) && (GET_BUS(to_push) == 2) ) {
+      gas_interceptor_detected = 1;     // see safety_declarations.h
+      controls_allowed = 1;
+      int gas_interceptor = VOLKSWAGEN_GET_INTERCEPTOR(to_push);
+      if ( (gas_interceptor > VOLKSWAGEN_GAS_INTERCEPTOR_THRSLD) &&
+           (gas_interceptor_prev <= VOLKSWAGEN_GAS_INTERCEPTOR_THRSLD) ) {
+        controls_allowed = 0;
+      }
+      gas_interceptor_prev = gas_interceptor;
+      // was ist mit gas_pressed?
+    }
+
+    // Update ACC status from ECU for controls-allowed state
+    // If gas interceptor not detected, controls only allowed when GRA/ACC active
     // Signal: Motor_2.GRA_Status
-    if (addr == MSG_MOTOR_2) {
+    if ( (addr == MSG_MOTOR_2) && ! (gas_interceptor_detected) && (GET_BUS(to_push) == 0) ) {
       int acc_status = (GET_BYTE(to_push, 2) & 0xC0U) >> 6;
       int cruise_engaged = ((acc_status == 1) || (acc_status == 2)) ? 1 : 0;
       if (cruise_engaged && !cruise_engaged_prev) {
@@ -130,26 +144,6 @@ static int volkswagen_pq_rx_hook(CANPacket_t *to_push) {
         controls_allowed = 0;
       }
       cruise_engaged_prev = cruise_engaged;
-    }
-*/
-
-    // Exit controls on rising edge of interceptor gas press
-    if ((addr == MSG_GAS_SENSOR) && (GET_BUS(to_push) == 2)) {
-      gas_interceptor_detected = 1;
-      controls_allowed = 1;
-      int gas_interceptor = VOLKSWAGEN_GET_INTERCEPTOR(to_push);
-      if ((gas_interceptor > VOLKSWAGEN_GAS_INTERCEPTOR_THRSLD) &&
-          (gas_interceptor_prev <= VOLKSWAGEN_GAS_INTERCEPTOR_THRSLD)) {
-        controls_allowed = 0;
-      }
-      gas_interceptor_prev = gas_interceptor;
-    }
-
-    // Update ACC status from ECU for controls-allowed state
-    // Signal: Motor_2.GRA_Status
-    if ((addr == MSG_MOTOR_2) && !gas_interceptor_detected && (GET_BUS(to_push) == 0)) {
-      int acc_status = (GET_BYTE(to_push, 2) & 0xC0) >> 6;
-      controls_allowed = ((acc_status == 1) || (acc_status == 2)) ? 1 : 0;
     }
 
     // Signal: Motor_3.Fahrpedal_Rohsignal
@@ -165,6 +159,46 @@ static int volkswagen_pq_rx_hook(CANPacket_t *to_push) {
     generic_rx_checks((addr == MSG_HCA_1));
   }
   return valid;
+}
+
+static bool volkswagen_steering_check(int desired_torque) {
+  bool violation = false;
+  uint32_t ts = microsecond_timer_get();
+
+  if (controls_allowed) {
+    // *** global torque limit check ***
+    violation |= max_limit_check(desired_torque, VOLKSWAGEN_PQ_MAX_STEER, -VOLKSWAGEN_PQ_MAX_STEER);
+
+    // *** torque rate limit check ***
+    violation |= driver_limit_check(desired_torque, desired_torque_last, &torque_driver,
+      VOLKSWAGEN_PQ_MAX_STEER, VOLKSWAGEN_PQ_MAX_RATE_UP, VOLKSWAGEN_PQ_MAX_RATE_DOWN,
+      VOLKSWAGEN_PQ_DRIVER_TORQUE_ALLOWANCE, VOLKSWAGEN_PQ_DRIVER_TORQUE_FACTOR);
+    desired_torque_last = desired_torque;
+
+    // *** torque real time rate limit check ***
+    violation |= rt_rate_limit_check(desired_torque, rt_torque_last, VOLKSWAGEN_PQ_MAX_RT_DELTA);
+
+    // every RT_INTERVAL set the new limits
+    uint32_t ts_elapsed = get_ts_elapsed(ts, ts_last);
+    if (ts_elapsed > VOLKSWAGEN_PQ_RT_INTERVAL) {
+      rt_torque_last = desired_torque;
+      ts_last = ts;
+    }
+  }
+
+  // no torque if controls is not allowed
+  if (!controls_allowed && (desired_torque != 0)) {
+    violation = true;
+  }
+
+  // reset to 0 if either controls is not allowed or there's a violation
+  if (violation || !controls_allowed) {
+    desired_torque_last = 0;
+    rt_torque_last = 0;
+    ts_last = ts;
+  }
+
+  return violation;
 }
 
 static int volkswagen_pq_tx_hook(CANPacket_t *to_send) {
@@ -186,45 +220,9 @@ static int volkswagen_pq_tx_hook(CANPacket_t *to_send) {
       desired_torque *= -1;
     }
 
-    bool violation = false;
-    uint32_t ts = microsecond_timer_get();
-
-    if (controls_allowed) {
-      // *** global torque limit check ***
-      violation |= max_limit_check(desired_torque, VOLKSWAGEN_PQ_MAX_STEER, -VOLKSWAGEN_PQ_MAX_STEER);
-
-      // *** torque rate limit check ***
-      violation |= driver_limit_check(desired_torque, desired_torque_last, &torque_driver,
-        VOLKSWAGEN_PQ_MAX_STEER, VOLKSWAGEN_PQ_MAX_RATE_UP, VOLKSWAGEN_PQ_MAX_RATE_DOWN,
-        VOLKSWAGEN_PQ_DRIVER_TORQUE_ALLOWANCE, VOLKSWAGEN_PQ_DRIVER_TORQUE_FACTOR);
-      desired_torque_last = desired_torque;
-
-      // *** torque real time rate limit check ***
-      violation |= rt_rate_limit_check(desired_torque, rt_torque_last, VOLKSWAGEN_PQ_MAX_RT_DELTA);
-
-      // every RT_INTERVAL set the new limits
-      uint32_t ts_elapsed = get_ts_elapsed(ts, ts_last);
-      if (ts_elapsed > VOLKSWAGEN_PQ_RT_INTERVAL) {
-        rt_torque_last = desired_torque;
-        ts_last = ts;
-      }
-    }
-
-    // no torque if controls is not allowed
-    if (!controls_allowed && (desired_torque != 0)) {
-      violation = true;
-    }
-
-    // reset to 0 if either controls is not allowed or there's a violation
-    if (violation || !controls_allowed) {
-      desired_torque_last = 0;
-      rt_torque_last = 0;
-      ts_last = ts;
-    }
-
-    if (violation) {
+    if (volkswagen_steering_check(desired_torque)) {
       tx = 0;
-    }
+    }  
   }
 
   // FORCE CANCEL: ensuring that only the cancel button press is sent when controls are off.
