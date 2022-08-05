@@ -288,6 +288,7 @@ def match_fw_to_car(fw_versions, allow_fuzzy=True):
 
 
 def get_fw_versions(logcan, sendcan, bus, extra=None, timeout=0.1, debug=False, progress=False):
+  print(">>> selfdrive/car/fw_versions.py called with parameters: logcan ", logcan , "sendcan", sendcan, "bus", bus)
   ecu_types = {}
 
   # Extract ECU addresses to query from fingerprints
@@ -342,7 +343,7 @@ def get_fw_versions(logcan, sendcan, bus, extra=None, timeout=0.1, debug=False, 
       f.subAddress = addr[1]
 
     car_fw.append(f)
-
+  print(">>> selfdrive/car/fw_versions.py: ecu_types ", ecu_types , "addrs", addrs, "parallel_addrs", parallel_addrs, "versions", versions, "car_fw", car_fw, "fw_versions", fw_versions)
   return car_fw
 
 
