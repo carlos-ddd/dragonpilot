@@ -224,7 +224,7 @@ class CarState(CarStateBase):
       ret.gas = (self.gasInterceptorSensor1 + self.gasInterceptorSensor2) / 2
       #ret.gas = (cam_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS'] + cam_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS2']) / 2.
       ret.gasPressed = ret.gas > 468
-      print(">>> carstate.py gasInterceptorSensor1:", self.gasInterceptorSensor1, "gasInterceptorSensor2", self.gasInterceptorSensor2)
+      #print(">>> carstate.py gasInterceptorSensor1:", self.gasInterceptorSensor1, "gasInterceptorSensor2", self.gasInterceptorSensor2)
 
     ret.brake = pt_cp.vl["Bremse_5"]['Bremsdruck'] / 250.0  # FIXME: this is pressure in Bar, not sure what OP expects
     ret.brakePressed = bool(pt_cp.vl["Motor_2"]['Bremstestschalter'])
@@ -291,10 +291,10 @@ class CarState(CarStateBase):
     #ret.stockAeb = bool(ext_cp.vl["ACC_10"]["ANB_Teilbremsung_Freigabe"]) or bool(ext_cp.vl["ACC_10"]["ANB_Zielbremsung_Freigabe"])
     
     # collect HCA_1 steering-data from stock HCA camera (MFK)
-    self.stock_HCA_Status = int(pt_cp.vl["HCA_1"]['HCA_Status'])
-    self.stock_HCA_LM_Offset = int(cam_cp.vl["HCA_1"]['LM_Offset'])
-    self.stock_HCA_LM_OffSign = bool(cam_cp.vl["HCA_1"]['LM_OffSign'])
-    self.stock_HCA_SteeringVal = int(-1 * stock_HCA_LM_Offset) if stock_HCA_LM_OffSign else stock_HCA_LM_Offset    # if sign bit is set -> neg. value
+    self.stock_HCA_Status = 3 #int(pt_cp.vl["HCA_1"]['HCA_Status'])
+    self.stock_HCA_LM_Offset = 0 #int(cam_cp.vl["HCA_1"]['LM_Offset'])
+    self.stock_HCA_LM_OffSign = False #bool(cam_cp.vl["HCA_1"]['LM_OffSign'])
+    self.stock_HCA_SteeringVal = 0#  int(-1 * stock_HCA_LM_Offset) if stock_HCA_LM_OffSign else stock_HCA_LM_Offset    # if sign bit is set -> neg. value
 
     # Update ACC setpoint. When the setpoint reads as 255, the driver has not
     # yet established an ACC setpoint, so treat it as zero.
