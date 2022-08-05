@@ -192,6 +192,7 @@ class CarState(CarStateBase):
 
     return ret
 
+  # called by selfdrive/car/volkswagen/interface.py: CS.update(self.cp, self.cp_cam, self.cp_ext, ...)
   def update_pq(self, pt_cp, cam_cp, acc_cp, trans_type):
     ret = car.CarState.new_message()
     # Update vehicle speed and acceleration from ABS wheel speeds.
@@ -276,7 +277,24 @@ class CarState(CarStateBase):
       ret.leftBlindspot = False # bool(cam_cp.vl["SWA_1"]["SWA_Infostufe_SWA_li"]) or bool(cam_cp.vl["SWA_1"]["SWA_Warnung_SWA_li"])
       ret.rightBlindspot = False # bool(cam_cp.vl["SWA_1"]["SWA_Infostufe_SWA_re"]) or bool(cam_cp.vl["SWA_1"]["SWA_Warnung_SWA_re"])
 
+    # Consume factory LDW data relevant for factory SWA (Lane Change Assist)
+    # and capture it for forwarding to the blind spot radar controller
+    self.ldw_stock_values = cam_cp.vl["LDW_1"]# if self.CP.networkLocation == NetworkLocation.fwdCamera else {}
 
+    # Stock FCW is considered active if the release bit for brake-jerk warning
+    # is set. Stock AEB considered active if the partial braking or target
+    # braking release bits are set.
+    # Refer to VW Self Study Program 890253: Volkswagen Driver Assistance
+    # Systems, chapter on Front Assist with Braking: Golf Family for all MQB
+    # carlos-ddd: might be same-ish on PQ!
+    #ret.stockFcw = bool(ext_cp.vl["ACC_10"]["AWV2_Freigabe"])
+    #ret.stockAeb = bool(ext_cp.vl["ACC_10"]["ANB_Teilbremsung_Freigabe"]) or bool(ext_cp.vl["ACC_10"]["ANB_Zielbremsung_Freigabe"])
+    
+    # collect HCA_1 steering-data from stock HCA camera (MFK)
+    self.stock_HCA_Status = int(cam_cp.vl["HCA_1"]['HCA_Status'])
+    self.stock_HCA_LM_Offset = int(cam_cp.vl["HCA_1"]['LM_Offset'])
+    self.stock_HCA_LM_OffSign = bool(cam_cp.vl["HCA_1"]['LM_OffSign'])
+    self.stock_HCA_SteeringVal = int(-1 * stock_HCA_LM_Offset) if stock_HCA_LM_OffSign else stock_HCA_LM_Offset    # if sign bit is set -> neg. value
 
     # Update ACC setpoint. When the setpoint reads as 255, the driver has not
     # yet established an ACC setpoint, so treat it as zero.
@@ -569,7 +587,7 @@ class CarState(CarStateBase):
     signals = []
     checks = []
 
-    if CP.networkLocation == NetworkLocation.gateway:
+    if CP.networkLocation == NetworkLocation.gateway:   # see selfdrive/car/volkswagen/interface.py ~line40
       print(">>> (8) carstate.py::get_pq_cam_can_parser(): network location gateway confirmed!")
       # The ACC radar is here on CANBUS.cam
       signals += [("ACA_V_Wunsch", "ACC_GRA_Anziege")]  # ACC set speed
