@@ -278,6 +278,10 @@ class Controls:
       if safety_mismatch or self.mismatch_counter >= 200:
         self.events.add(EventName.controlsMismatch)
         print(">>> selfdrive/controls/controlsd.py: controls mismatch: safety_mismatch", safety_mismatch, "mismatch_counter", self.mismatch_counter)
+        print(">>> selfdrive/controls/controlsd.py: controls mismatch: safety_mismatch additional information:")
+        print(">>> selfdrive/controls/controlsd.py: pandaState.safetyModel", pandaState.safetyModel, "should be", self.CP.safetyConfigs[i].safetyModel, "result", pandaState.safetyModel == self.CP.safetyConfigs[i].safetyModel)
+        print(">>> selfdrive/controls/controlsd.py: pandaState.safetyParam ", pandaState.safetyParam, "should be", self.CP.safetyConfigs[i].safetyParam, "result", pandaState.safetyParam == self.CP.safetyConfigs[i].safetyParam)
+        print(">>> selfdrive/controls/controlsd.py: pandaState.unsafeMode ", pandaState.unsafeMode, "should be", self.CP.unsafeMode, "result", pandaState.unsafeMode == self.CP.unsafeMode)
 
       if log.PandaState.FaultType.relayMalfunction in pandaState.faults:
         self.events.add(EventName.relayMalfunction)
