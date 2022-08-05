@@ -91,14 +91,15 @@ static int volkswagen_pq_rx_hook(CANPacket_t *to_push) {
 
   bool valid = addr_safety_check(to_push, &volkswagen_pq_rx_checks,
                                 volkswagen_pq_get_checksum, volkswagen_pq_compute_checksum, volkswagen_pq_get_counter);
-//  teslaradar_rx_hook(to_push);
+                                
+  //teslaradar_rx_hook(to_push);
 
-  if (valid && (GET_BUS(to_push) == 0U)) {
+  if (valid) {
     int addr = GET_ADDR(to_push);
 
     // Update in-motion state from speed value.
     // Signal: Bremse_1.Geschwindigkeit_neu__Bremse_1_
-    if (addr == MSG_BREMSE_1) {
+    if ((addr == MSG_BREMSE_1) && (GET_BUS(to_push) == 0)) {
       int speed = ((GET_BYTE(to_push, 2) & 0xFEU) >> 1) | (GET_BYTE(to_push, 3) << 7);
       // DBC speed scale 0.01: 0.3m/s = 108.
       vehicle_moving = speed > 108;
@@ -107,7 +108,7 @@ static int volkswagen_pq_rx_hook(CANPacket_t *to_push) {
     // Update driver input torque samples
     // Signal: Lenkhilfe_3.LH3_LM (absolute torque)
     // Signal: Lenkhilfe_3.LH3_LMSign (direction)
-    if (addr == MSG_LENKHILFE_3) {
+    if ((addr == MSG_LENKHILFE_3) && (GET_BUS(to_push) == 0)) {
       int torque_driver_new = GET_BYTE(to_push, 2) | ((GET_BYTE(to_push, 3) & 0x3U) << 8);
       int sign = (GET_BYTE(to_push, 3) & 0x4U) >> 2;
       if (sign == 1) {
@@ -152,11 +153,11 @@ static int volkswagen_pq_rx_hook(CANPacket_t *to_push) {
     }
 
     // Signal: Motor_2.Bremslichtschalter
-    if (addr == MSG_MOTOR_2) {
+    if ((addr == MSG_MOTOR_2) && (GET_BUS(to_push) == 0)) {
       brake_pressed = (GET_BYTE(to_push, 2) & 0x1U);
     }
 
-    generic_rx_checks((addr == MSG_HCA_1));
+    generic_rx_checks((addr == MSG_HCA_1) && (GET_BUS(to_push) == 0));
   }
   return valid;
 }
@@ -222,7 +223,7 @@ static int volkswagen_pq_tx_hook(CANPacket_t *to_send) {
 
     if (volkswagen_steering_check(desired_torque)) {
       tx = 0;
-    }  
+    }
   }
 
   // FORCE CANCEL: ensuring that only the cancel button press is sent when controls are off.
