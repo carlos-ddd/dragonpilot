@@ -58,12 +58,12 @@ def create_mqb_acc_buttons_control(packer, bus, buttonStatesToSend, CS, idx):
 #                                                                         #
 # ----------------------------------------------------------------------- #
 
-def create_pq_steering_control(packer, bus, apply_steer, idx, lkas_enabled):
+def create_pq_steering_control(packer, bus, apply_steer, idx, lkas_enabled, hca_status_value):
   values = {
     "HCA_Zaehler": idx,
     "LM_Offset": abs(apply_steer),
     "LM_OffSign": 1 if apply_steer < 0 else 0,
-    "HCA_Status": 7 if (lkas_enabled and apply_steer != 0) else 3,
+    "HCA_Status": hca_status_value if (lkas_enabled and apply_steer != 0) else 3,   # HCA7=powerful, HCA5=not so powerful (used by stock camera), HCA3=not steering
     "Vib_Freq": 16,
   }
 
@@ -155,11 +155,30 @@ def create_pq_pedal_control(packer, bus, apply_gas, idx):
     "ENABLE": enable,
     "COUNTER_PEDAL": idx & 0xF,
   }
+  
+# Karls Golf6 OAT=30degC, battery old but OK,
+# connected to small charger, engine off,
+# recordings from comma pedal values (carstate.py)
+# sensor1 and sensor2 values measured
+# min1 = 217
+# max1 = 1277
+# min2 = 196.15
+# max2 = 1254.8
+# mean_leergas_1 = 228.61
+# mean_leergas_2 = 225.01
+# mean_leergas_avg = 226.81
+# mean_vollgas_1 = 1273.5
+# mean_vollgas_2 = 1245.4
+# mean_vollgas_avg = 1259.5
+
+# too high and too low values are known to cause ECU DTCs (invalid gas sensor signal),
+# valid values are said to range between 0.5V and 4.5V
 
   if enable:
-    apply_gas = apply_gas * 1125.
-    if (apply_gas < 227):
+    if apply_gas < 227:
       apply_gas = 227
+    if apply_gas > 1240:
+      apply_gas = 1240
     values["GAS_COMMAND"] = apply_gas
     values["GAS_COMMAND2"] = apply_gas
 
@@ -176,18 +195,18 @@ def create_pq_hud_control(packer, bus, hca_enabled, steering_pressed, hud_alert,
   if hca_enabled:
     left_lane_hud = 3 if left_lane_visible else 1
     right_lane_hud = 3 if right_lane_visible else 1
+    values = {
+        "Right_Lane_Status": right_lane_hud,
+        "Left_Lane_Status": left_lane_hud,
+        "SET_ME_X1": 1,
+        "Kombi_Lamp_Orange": 1 if hca_enabled and steering_pressed else 0,
+        "Kombi_Lamp_Green": 1 if hca_enabled and not steering_pressed else 0,
+        "LDW_Textbits": hud_alert,
+    }
   else:
     left_lane_hud = 2 if left_lane_visible else 1
     right_lane_hud = 2 if right_lane_visible else 1
-
-  values = {
-    "Right_Lane_Status": right_lane_hud,
-    "Left_Lane_Status": left_lane_hud,
-    "SET_ME_X1": 1,
-    "Kombi_Lamp_Orange": 1 if hca_enabled and steering_pressed else 0,
-    "Kombi_Lamp_Green": 1 if hca_enabled and not steering_pressed else 0,
-    "LDW_Textbits": hud_alert,
-  }
+    values = ldw_stock_values.copy()
   return packer.make_can_msg("LDW_1", bus, values)
 
 
