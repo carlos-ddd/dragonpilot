@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // Include Tesla radar safety code
 //#include "safety_teslaradar.h"
 
