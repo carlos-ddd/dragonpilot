@@ -291,7 +291,7 @@ class CarState(CarStateBase):
     #ret.stockAeb = bool(ext_cp.vl["ACC_10"]["ANB_Teilbremsung_Freigabe"]) or bool(ext_cp.vl["ACC_10"]["ANB_Zielbremsung_Freigabe"])
     
     # collect HCA_1 steering-data from stock HCA camera (MFK)
-    self.stock_HCA_Status = int(cam_cp.vl["HCA_1"]['HCA_Status'])
+    self.stock_HCA_Status = int(acc_cp.vl["HCA_1"]['HCA_Status'])
     self.stock_HCA_LM_Offset = int(cam_cp.vl["HCA_1"]['LM_Offset'])
     self.stock_HCA_LM_OffSign = bool(cam_cp.vl["HCA_1"]['LM_OffSign'])
     self.stock_HCA_SteeringVal = int(-1 * stock_HCA_LM_Offset) if stock_HCA_LM_OffSign else stock_HCA_LM_Offset    # if sign bit is set -> neg. value
