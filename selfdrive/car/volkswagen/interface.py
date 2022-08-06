@@ -27,7 +27,6 @@ class CarInterface(CarInterfaceBase):
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), car_fw=None):
     ret = CarInterfaceBase.get_std_params(candidate, fingerprint)
     ret.carName = "volkswagen"
-    ret.radarOffCan = False	# carlos_ddd we have tesla radar ?
 
     if True:  # pylint: disable=using-constant-test
 
@@ -45,11 +44,8 @@ class CarInterface(CarInterfaceBase):
         else:  # No trans at all
           ret.transmissionType = TransmissionType.manual
           print(">>> (3) interface.py: manual transmission detected")
-
         ret.enableBsm = 0x3BA in fingerprint[0]  # SWA_1
         print(">>> (4) interface.py: enableBsm based on fingerprint:", ret.enableBsm)
-
-        print(">>> (5) interface.py: fingerprint[0]", fingerprint[0])
 
       else:
         print(">>> (2) interface.py: candidat is MQB (not in PQ_CARS!!!!)")
@@ -66,8 +62,19 @@ class CarInterface(CarInterfaceBase):
           ret.networkLocation = NetworkLocation.gateway
         else:
           ret.networkLocation = NetworkLocation.fwdCamera
-
         ret.enableBsm = 0x30F in fingerprint[0]  # SWA_01
+      print(">>> (5) interface.py: fingerprint[0]", fingerprint[0])
+
+    # ==================
+    # Tuning PARAMETERS
+    # ==================
+    # all parameters listed here are OP built in values!
+    # none of them are defined by user, all are listed in cereal/car.capnp
+    # and probably they must be listed there!
+
+    # ------------------
+    # LATERAL PARAMETERS
+    # ------------------
 
     # Global lateral tuning defaults, can be overridden per-vehicle
     ret.steerActuatorDelay = 0.1
@@ -76,46 +83,14 @@ class CarInterface(CarInterfaceBase):
     ret.steerRatio = 15.6  # Let the params learner figure this out
     tire_stiffness_factor = 1.0  # Let the params learner figure this out
 
-    ret.lateralTuning.pid.kpBP = [0.]
-    ret.lateralTuning.pid.kiBP = [0.]
+#    ret.lateralTuning.pid.kpBP = [0.]
+#    ret.lateralTuning.pid.kiBP = [0.]
     ret.lateralTuning.pid.kf = 0.00006
-    ret.lateralTuning.pid.kpV = [0.6] # old [0.3]
-    ret.lateralTuning.pid.kiV = [0.2] # old [0.1]
-
-    # Check for Comma Pedal
-    ret.enableGasInterceptor = True
-    # OP LONG parameters (https://github.com/commaai/openpilot/wiki/Tuning#Tuning-the-longitudinal-PI-controller)
-    # see Edgy's impelmentation now .... not longer neede in long planer!
-#    ret.gasMaxBP = [0., 1.]  # m/s
-#    ret.gasMaxV = [0.3, 1.0]  # max gas allowed
-#    ret.brakeMaxBP = [0.]  # m/s
-#    ret.brakeMaxV = [1.]  # max brake allowed (positive number)
-
-    ret.openpilotLongitudinalControl = True
-    ret.longitudinalActuatorDelayUpperBound = 0.5  # s
-    ret.stoppingControl = True
-    ret.vEgoStopping = 1.0
-    ret.stopAccel = -0.5
-    ret.stoppingDecelRate = 0.3
-
-    #carlos-ddd old
-#    ret.longitudinalTuning.deadzoneBP = [0.]  #m/s
-#    ret.longitudinalTuning.deadzoneV = [.1]  # if control-loops (internal) error value is within +/- this value -> the error is set to 0.0
-#    ret.longitudinalTuning.kpBP = [2.8, 8.3, 13.8, 22.2, 33.3]  # m/s
-#    ret.longitudinalTuning.kpV = [2.,   2.,  3.,   4.2,  6.]
-#    ret.longitudinalTuning.kiBP = [2.8, 8.3, 13.8, 22.2, 33.3]  # m/s
-#    ret.longitudinalTuning.kiV = [2.,   1.,  1.2,  3.2,  3.]
-
-    # Edgy new
-    ret.longitudinalTuning.deadzoneBP = [0.]
-    ret.longitudinalTuning.deadzoneV = [0.]
-    ret.longitudinalTuning.kpBP = [0.]
-    ret.longitudinalTuning.kpV = [0.1]
-    ret.longitudinalTuning.kiBP = [0.]
-    ret.longitudinalTuning.kiV = [0.03]
-
-    # PQ lateral tuning HCA_Status 7 carlos-ddd (old)
-    #            km/h                 50   126
+#    ret.lateralTuning.pid.kpV = [0.6] # old [0.3]
+#    ret.lateralTuning.pid.kiV = [0.2] # old [0.1]
+    
+# PQ lateral tuning HCA_Status 7 carlos-ddd (old)
+#            km/h                 50   126
 #    ret.lateralTuning.pid.kpBP = [0., 14., 35.]
 #    ret.lateralTuning.pid.kiBP = [0., 14., 35.]
 #    ret.lateralTuning.pid.kpV = [0.12, 0.165, 0.185]
@@ -127,9 +102,47 @@ class CarInterface(CarInterfaceBase):
     ret.lateralTuning.pid.kpV = [0.116, 0.13, 0.14]
     ret.lateralTuning.pid.kiV = [0.09, 0.10, 0.11]
 
-    ret.stoppingControl = True
-    ret.directAccelControl = False
-    #ret.startAccel = 0.0
+    # -----------------------
+    # LONGITUDINAL PARAMETERS
+    # -----------------------
+
+    ret.radarOffCan = False	# carlos_ddd we have tesla radar ? It's not clear if it's used but cereal/car.capnp lists it with comment: "True when radar objects aren't visible on CAN"!
+    # Check for Comma Pedal
+    ret.enableGasInterceptor = True                     # cereal/car.capnp
+
+    # OP LONG parameters (https://github.com/commaai/openpilot/wiki/Tuning#Tuning-the-longitudinal-PI-controller)
+    # see Edgy's impelmentation now .... not longer neede in long planer (in cereal/car.capnp marked as DEPRECCATED)!
+#    ret.gasMaxBP = [0., 1.]  # m/s
+#    ret.gasMaxV = [0.3, 1.0]  # max gas allowed
+#    ret.brakeMaxBP = [0.]  # m/s
+#    ret.brakeMaxV = [1.]  # max brake allowed (positive number)
+#    ret.startAccel = 0.0
+
+    ret.openpilotLongitudinalControl = True             # cereal/car.capnp is openpilot doing the longitudinal control?
+    ret.longitudinalActuatorDelayUpperBound = 0.5       # cereal/car.capnp Gas/Brake actuator delay in seconds, upper bound
+    #ret.longitudinalActuatorDelayLowerBound            # cereal/car.capnp Gas/Brake actuator delay in seconds, lower bound
+    ret.stoppingControl = True                          # cereal/car.capnp Does the car allows full control even at lows speeds when stopping
+    ret.vEgoStopping = 1.0                              # cereal/car.capnp Speed at which the car goes into stopping state
+    #ret.vEgoStarting                                   # cereal/car.capnp Speed at which the car goes into starting state
+    ret.stopAccel = -0.5                                # cereal/car.capnp Required acceleraton to keep vehicle stationary
+    ret.stoppingDecelRate = 0.3                         # cereal/car.capnp m/s^2/s while trying to stop
+    ret.directAccelControl = False                      # cereal/car.capnp Does the car have direct accel control or just gas/brake
+
+    #carlos-ddd old
+#    ret.longitudinalTuning.deadzoneBP = [0.]  #m/s
+#    ret.longitudinalTuning.deadzoneV = [.1]  # if control-loops (internal) error value is within +/- this value -> the error is set to 0.0
+#    ret.longitudinalTuning.kpBP = [2.8, 8.3, 13.8, 22.2, 33.3]  # m/s
+#    ret.longitudinalTuning.kpV = [2.,   2.,  3.,   4.2,  6.]
+#    ret.longitudinalTuning.kiBP = [2.8, 8.3, 13.8, 22.2, 33.3]  # m/s
+#    ret.longitudinalTuning.kiV = [2.,   1.,  1.2,  3.2,  3.]
+
+    # Edgy new
+    ret.longitudinalTuning.deadzoneBP = [0.]    #m/s
+    ret.longitudinalTuning.deadzoneV = [0.]     # if control-loops (internal) error value is within +/- this value -> the error is set to 0.0
+    ret.longitudinalTuning.kpBP = [0.]          #m/s
+    ret.longitudinalTuning.kpV = [0.1]
+    ret.longitudinalTuning.kiBP = [0.]          #m/s
+    ret.longitudinalTuning.kiV = [0.03]
 
 
     # Per-chassis tuning values, override tuning defaults here if desired
