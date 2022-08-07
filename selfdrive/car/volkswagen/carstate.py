@@ -549,7 +549,7 @@ class CarState(CarStateBase):
       signals += [("Kupplungsschalter", "Motor_1"),  # Clutch switch
                   ("GK1_Rueckfahr", "Gate_Komf_1")]  # Reverse light from BCM
       checks += [("Motor_1", 100)]  # From J623 Engine control module
-#      checks += [("Getriebe_2", 100)]  # From J623 Engine control module (due to manual shift, there is no TCU so ECU emits it)
+#      checks += [("Getriebe_2", 100)]  # From J623 Engine control module (due to manual shift, there is no TCU so ECU emits it), signal probabaly not routed to ext-CAN!
       print(">>> (4) carstate.py: CAN checks for manual transmission added!")
 
     if CP.networkLocation == NetworkLocation.fwdCamera:
