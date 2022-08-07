@@ -14,11 +14,13 @@ class CarInterface(CarInterfaceBase):
     self.displayMetricUnitsPrev = None
     self.buttonStatesPrev = BUTTON_STATES.copy()
 
+    # CAN bus / parser definition
+    # CS.update()
     if CP.networkLocation == NetworkLocation.fwdCamera:
       print(">>> (0) interface.py: networklocation.fwdCamera")
       self.ext_bus = CANBUS.pt
       self.cp_ext = self.cp
-    else:
+    else:   # carlos-ddd: that's where we are integrated (J533 CAN gateway)
       print(">>> (0) interface.py: networklocation-ELSE")
       self.ext_bus = CANBUS.cam
       self.cp_ext = self.cp_cam

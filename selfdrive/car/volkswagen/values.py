@@ -10,11 +10,12 @@ TransmissionType = car.CarParams.TransmissionType
 GearShifter = car.CarState.GearShifter
 
 class CarControllerParams:
+  #                             (xxx_STEP * 10) = cycle in [ms]
   HCA_STEP = 2                   # HCA message frequency 50Hz on all vehicles
   LDW_STEP = 5                   # LDW message frequency 20Hz on PQ35/PQ46/NMS
   GRA_ACC_STEP = 3               # GRA_ACC_01 message frequency 33Hz
-  MOB_STEP = 2                   # PQ_MOB message frequency 50Hz
-  GAS_STEP = 2                   # GAS_COMMAND message frequency 50Hz
+  MOB_STEP = 2                   # PQ_MOB message frequency 20ms = 50Hz
+  GAS_STEP = 2                   # GAS_COMMAND message frequency 20ms = 50Hz
   AWV_STEP = 2                   # ACC LED Control 20ms = 50Hz
   ACA_STEP = 4                   # mACC_GRA_Anzeige 40ms = 25Hz
   OPSTA_STEP = 10                # mOP_Status1 to STM32 100ms = 10 Hz
@@ -48,15 +49,15 @@ class CarControllerParams:
   # END following block taken from Edgy
 
 class CANBUS:
-  pt = 0
-  br = 1
-  cam = 2
+  pt = 0    # carlos-ddd: ext. CAN at CAN-gateway
+  br = 1    # carlos-ddd: CAN powertrain tap
+  cam = 2   # carlos-ddd: ext. CAN (isolated) towards MFK, Tesla radar, SWA, ...
 
 class DBC_FILES:
   mqb = "vw_mqb_2010"  # Used for all cars with MQB-style CAN messaging
   pq46 = "vw_golf_mk4"
 
-DBC = defaultdict(lambda: dbc_dict(DBC_FILES.mqb, None))  # type: Dict[str, Dict[str, str]]
+DBC = defaultdict(lambda: dbc_dict(DBC_FILES.pq46, None))  # type: Dict[str, Dict[str, str]]
 
 BUTTON_STATES = {
   "accelCruise": False,
@@ -95,6 +96,13 @@ PQ_LDW_SOUND = {
   "info_chime": 1,
   "warn_chime": 2,
 }
+
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+### NOTHING USEFUL BELOW THIS LINE ###
+
 
 # Check the 7th and 8th characters of the VIN before adding a new CAR. If the
 # chassis code is already listed below, don't add a new CAR, just add to the

@@ -13,7 +13,7 @@ class CarState(CarStateBase):
 
     self.ACC = PQacc()
 
-	  ### START OF MAIN CONFIG OPTIONS ###
+    ### START OF MAIN CONFIG OPTIONS ###
     ### Do NOT modify here, modify in /data/bb_openpilot.cfg and reboot
     self.useTeslaRadar = CP.enableGasInterceptor
     print(">>> (0) carstate.py::useTeslaRadar:", self.useTeslaRadar)
@@ -23,11 +23,20 @@ class CarState(CarStateBase):
     self.radarEpasType = 3
     ### END OF MAIN CONFIG OPTIONS ###
 
+
+    ## == ##
+    ## PQ ##
+    ## == ##
     if CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.volkswagenPq:
       can_define = CANDefine(DBC_FILES.pq46)
       # Configure for PQ35/PQ46/NMS network messaging
+      # following functions are called / defined by selfdrive/car/interfaces.py (not volkswagen but generic!):
+      # CS.get_can_parser() -> self.cp
+      # CS.get_cam_can_parser() -> self.cp_cam
       self.get_can_parser = self.get_pq_can_parser
       self.get_cam_can_parser = self.get_pq_cam_can_parser
+      # [CS.get_body_can_parser() -> self.cp_body]
+      # [CS.get_loopback_can_parser() -> I guess only needed for testing]
       self.update = self.update_pq
       print(">>>  (1) carstate.py: safety model PQ")
 
@@ -43,6 +52,10 @@ class CarState(CarStateBase):
       else:
         print(">>> (3) carstate.py: enableGasInterceptor is false!")
 
+
+    ## === ##
+    ## MQB ##
+    ## === ##
     else:
       print(">>> (1) carstate.py: safety model MQB")
       can_define = CANDefine(DBC_FILES.mqb)
@@ -276,8 +289,8 @@ class CarState(CarStateBase):
     # Refer to VW Self Study Program 890253: Volkswagen Driver Assist Systems,
     # pages 32-35.
     if self.CP.enableBsm:
-      ret.leftBlindspot = False # bool(cam_cp.vl["SWA_1"]["SWA_Infostufe_SWA_li"]) or bool(cam_cp.vl["SWA_1"]["SWA_Warnung_SWA_li"])
-      ret.rightBlindspot = False # bool(cam_cp.vl["SWA_1"]["SWA_Infostufe_SWA_re"]) or bool(cam_cp.vl["SWA_1"]["SWA_Warnung_SWA_re"])
+      ret.leftBlindspot = bool(cam_cp.vl["SWA_1"]["SWA_Infostufe_SWA_li"]) or bool(cam_cp.vl["SWA_1"]["SWA_Warnung_SWA_li"])
+      ret.rightBlindspot = bool(cam_cp.vl["SWA_1"]["SWA_Infostufe_SWA_re"]) or bool(cam_cp.vl["SWA_1"]["SWA_Warnung_SWA_re"])
 
     # Consume factory LDW data relevant for factory SWA (Lane Change Assist)
     # and capture it for forwarding to the blind spot radar controller
@@ -293,10 +306,10 @@ class CarState(CarStateBase):
     #ret.stockAeb = bool(ext_cp.vl["ACC_10"]["ANB_Teilbremsung_Freigabe"]) or bool(ext_cp.vl["ACC_10"]["ANB_Zielbremsung_Freigabe"])
     
     # collect HCA_1 steering-data from stock HCA camera (MFK)
-    self.stock_HCA_Status = 3 #int(pt_cp.vl["HCA_1"]['HCA_Status'])
-    self.stock_HCA_LM_Offset = 0 #int(cam_cp.vl["HCA_1"]['LM_Offset'])
-    self.stock_HCA_LM_OffSign = False #bool(cam_cp.vl["HCA_1"]['LM_OffSign'])
-    self.stock_HCA_SteeringVal = 0#  int(-1 * stock_HCA_LM_Offset) if stock_HCA_LM_OffSign else stock_HCA_LM_Offset    # if sign bit is set -> neg. value
+    self.stock_HCA_Status = int(cam_cp.vl["HCA_1"]['HCA_Status'])
+    self.stock_HCA_LM_Offset = int(cam_cp.vl["HCA_1"]['LM_Offset'])
+    self.stock_HCA_LM_OffSign = bool(cam_cp.vl["HCA_1"]['LM_OffSign'])
+    self.stock_HCA_SteeringVal =  int(-1 * stock_HCA_LM_Offset) if stock_HCA_LM_OffSign else stock_HCA_LM_Offset    # if sign bit is set -> neg. value
 
     # Update ACC setpoint. When the setpoint reads as 255, the driver has not
     # yet established an ACC setpoint, so treat it as zero.
@@ -464,6 +477,7 @@ class CarState(CarStateBase):
 
   @staticmethod
   def get_pq_can_parser(CP):
+    # carlos-ddd: this would be the CAN parser for signals on extended CAN on the GATEWAY-side of panda (can0)
     signals = [
       # sig_name, sig_address, default
       ("LH3_BLW", "Lenkhilfe_3"),                # Absolute steering angle
@@ -502,11 +516,12 @@ class CarState(CarStateBase):
       ("GRA_Down_lang", "GRA_Neu"),              # ACC button, decrease or decel, long press
       ("GRA_Up_kurz", "GRA_Neu"),                # ACC button, increase or accel, short press
       ("GRA_Down_kurz", "GRA_Neu"),              # ACC button, decrease or decel, short press
-      ("GRA_Recall", "GRA_Neu"),             # ACC button, resume
-      ("GRA_Zeitluecke", "GRA_Neu"),     # ACC button, time gap adj
-      ("BR8_Sta_ADR_BR", "Bremse_8", 0),            # ABS Pump actively braking for ACC
-      ("ESP_Eingriff", "Bremse_1", 0),              # ABS stability intervention
-      ("ASR_Anforderung", "Bremse_1", 0),           # ABS slip detected
+      ("GRA_Recall", "GRA_Neu"),                 # ACC button, resume
+      ("GRA_Zeitluecke", "GRA_Neu"),             # ACC button, time gap adj
+      ("BR8_Sta_ADR_BR", "Bremse_8"),            # ABS Pump actively braking for ACC
+      ("ESP_Eingriff", "Bremse_1"),              # ABS stability intervention
+      ("ASR_Anforderung", "Bremse_1"),           # ABS slip detected
+      ("Motordrehzahl", "Motor_1"),              # engine RPM
     ]
 
     checks = [
@@ -549,10 +564,10 @@ class CarState(CarStateBase):
         print(">>> (6) carstate.py: CAN checks for blindspot added!")
 
     #checks = []
-    print(">>> (7) carstate.py: CAN checks and signals:")
+    print(">>> (7) carstate.py: CAN checks and signals for get_pq_can_parser() (not get_pq_cam_can_parser()):")
     print(">>> carstate.py::pq::signals", signals)
     print(">>> carstate.py::pq::checks", checks)
-    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.pt, False)
+    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.pt, False)    # -> assign to CANBUS.pt (can0 see values.py)
 
   @staticmethod
   def get_mqb_cam_can_parser(CP):
@@ -585,6 +600,8 @@ class CarState(CarStateBase):
 
   @staticmethod
   def get_pq_cam_can_parser(CP):
+    # carlos-ddd: this would be the CAN parser for signals on extended CAN on the comma pedal, MFK, SWA, ... -side of panda (can2) -> the "isolated" part
+    
     # TODO: Need to monitor LKAS camera, if present, for TLC/DLC/warning signals for passthru to SWA
     signals = []
     checks = []
@@ -598,17 +615,29 @@ class CarState(CarStateBase):
         print(">>> (9) carstate.py::get_pq_cam_can_parser(): blindspot enabled (gateway) checks added")
         signals += PqExtraSignals.bsm_radar_signals
         checks += PqExtraSignals.bsm_radar_checks
+    else:
+      print(">>> (8) carstate.py::get_pq_cam_can_parser(): network location is NOT gateway !!!")
 
     if CP.enableGasInterceptor:
       print(">>> (10) carstate.py::get_pq_cam_can_parser(): enableGasInterceptor, checks added ")
-      signals += [("INTERCEPTOR_GAS", "GAS_SENSOR", 0), ("INTERCEPTOR_GAS2", "GAS_SENSOR", 0)]
+      signals += [("INTERCEPTOR_GAS", "GAS_SENSOR"), ("INTERCEPTOR_GAS2", "GAS_SENSOR")]
       checks += [("GAS_SENSOR", 50)]
+
+    signals += [("HCA_Status", "HCA_1"), 
+                ("LM_Offset", "HCA_1"),
+                ("LM_OffSign", "HCA_1"),
+                ]
+
+# wee need a flag like CP.enableBsm (needs to be in car.capnp) for stockHCA present
+#    checks += [("HCA_1", 50),
+#               ("LDW_1", 50),
+#               ]
 
     #checks = []
     print(">>> (11) carstate.py::get_pq_cam_can_parser(): CAN checks and signals (get_pq_cam_can_parser()):")
     print(">>> carstate.py::pq::signals", signals)
     print(">>> carstate.py::pq::checks", checks)
-    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.cam, False)
+    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.cam, False)    # -> assign to CANBUS.cam (can2 see values.py)
 
 class PqExtraSignals:
   # Additional signal and message lists for optional or bus-portable controllers
