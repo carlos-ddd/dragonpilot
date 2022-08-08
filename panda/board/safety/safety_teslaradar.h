@@ -284,6 +284,9 @@ static void teslaradar_rx_hook(CANPacket_t *to_push)
   }
 */
    uint32_t addr = GET_ADDR(to_push);
+   
+   UNUSED(addr);
+   UNUSED(bus_number);
 
 /*
   if ((addr == tesla_radar_trigger_message_id) && (bus_number == 1) && (tesla_radar_trigger_message_id > 0)) {
