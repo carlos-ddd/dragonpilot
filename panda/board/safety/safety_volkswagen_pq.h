@@ -254,6 +254,7 @@ int radarEpasType = 0;
 uint32_t tesla_radar_trigger_message_id = 0x4A0; //id of the message
 uint8_t tesla_radar_can = 2; // 0, 1 or 2 set from EON via fake message
 char radar_VIN[] = "                 "; //leave empty if your radar VIN matches the car VIN
+int tesla_radar_vin_complete = 0; //set to 7 when complete vin is received
 
  if (addr == MSG_TESLA_VIN) {
 
@@ -263,6 +264,7 @@ char radar_VIN[] = "                 "; //leave empty if your radar VIN matches 
    UNUSED(radarEpasType);
    UNUSED(radarPosition);
    UNUSED(tesla_radar_should_send);
+   UNUSED(tesla_radar_vin_complete);
 
    int id = ( GET_BYTE(to_send, 0) );
    int radarVin_b1 = ( GET_BYTE(to_send, 1) );
@@ -307,7 +309,6 @@ char radar_VIN[] = "                 "; //leave empty if your radar VIN matches 
       return 0;
     }
   }
-  UNUSED(tesla_radar_vin_complete);
 
   // GAS PEDAL: safety check
   if (addr == MSG_GAS_COMMAND) {
