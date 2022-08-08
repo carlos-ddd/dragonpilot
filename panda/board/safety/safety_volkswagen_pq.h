@@ -257,6 +257,14 @@ char radar_VIN[] = "                 "; //leave empty if your radar VIN matches 
 
  if (addr == MSG_TESLA_VIN) {
 
+   UNUSED(tesla_radar_vin_complete);
+   UNUSED(radar_VIN);
+   UNUSED(tesla_radar_can);
+   UNUSED(tesla_radar_trigger_message_id);
+   UNUSED(radarEpasType);
+   UNUSED(radarPosition);
+   UNUSED(tesla_radar_should_send);
+
    int id = ( GET_BYTE(to_send, 0) );
    int radarVin_b1 = ( GET_BYTE(to_send, 1) );
    int radarVin_b2 = ( GET_BYTE(to_send, 2) );
