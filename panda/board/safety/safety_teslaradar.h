@@ -79,26 +79,13 @@ static int add_tesla_cksm2(uint32_t dl, uint32_t dh, int msg_id, int msg_len) {
 
 void can_send(CANPacket_t *to_push, uint8_t bus_number, bool skip_tx_hook);
 
-/*
-static void send_fake_message(uint32_t RIR, uint32_t RDTR,int msg_len, int msg_addr, uint8_t bus_num, uint32_t data_lo, uint32_t data_hi) {
-  CAN_FIFOMailBox_TypeDef to_send;
-  uint32_t addr_mask = 0x001FFFFF;
-  to_send.RIR = (msg_addr << 21) + (addr_mask & (RIR | 1));
-  to_send.RDTR = (RDTR & 0xFFFFFFF0) | msg_len;
-  to_send.RDLR = data_lo;
-  to_send.RDHR = data_hi;
-  can_send(&to_send, bus_num, true);
-}
-*/
-
+//static void send_fake_message(uint32_t RIR, uint32_t RDTR,int msg_len, int msg_addr, uint8_t bus_num, uint32_t data_lo, uint32_t data_hi) {
 static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, uint8_t bus_num, uint32_t data_lo, uint32_t data_hi) {
+  UNUSED(received)
   CANPacket_t to_send;
-  to_send.reserved = received->reserved;
   to_send.bus = bus_num;
   to_send.data_len_code = msg_len;
-  to_send.rejected = received->rejected;
-  to_send.returned = received->returned;
-  to_send.extended = received->extended;
+  to_send.extended = 0U;
   to_send.addr = msg_addr;
   to_send.data[0] = ( data_lo & 0xFF );
   to_send.data[1] = ( (data_lo>>8) & 0xFF );
@@ -108,9 +95,8 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   to_send.data[5] = ( (data_hi>>8) & 0xFF );
   to_send.data[6] = ( (data_hi>>18) & 0xFF );
   to_send.data[7] = ( (data_hi>>24) & 0xFF );
-
-
 /*
+  CAN_FIFOMailBox_TypeDef to_send;
   uint32_t addr_mask = 0x001FFFFF;
   to_send.RIR = (msg_addr << 21) + (addr_mask & (RIR | 1));   // <<21 = std_id
   to_send.RDTR = (RDTR & 0xFFFFFFF0) | msg_len; // ? dlc only?
@@ -124,7 +110,7 @@ static uint32_t radar_VIN_char(int pos, int shift) {
   return (((int)radar_VIN[pos]) << (shift * 8));
 }
 
-/*
+
 //static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
 static void activate_tesla_radar(CANPacket_t *received) {
     //if we did not receive the VIN or no request to activate radar, then return
@@ -257,7 +243,7 @@ static void activate_tesla_radar(CANPacket_t *received) {
     tesla_radar_counter = tesla_radar_counter % 100;
 }
 
-*/
+
 static void teslaradar_rx_hook(CANPacket_t *to_push)
 {
   uint8_t bus_number = GET_BUS(to_push);
@@ -286,11 +272,7 @@ static void teslaradar_rx_hook(CANPacket_t *to_push)
   }
 */
    uint32_t addr = GET_ADDR(to_push);
-   
-   UNUSED(addr);
-   UNUSED(bus_number);
 
-/*
   if ((addr == tesla_radar_trigger_message_id) && (bus_number == 1) && (tesla_radar_trigger_message_id > 0)) {
     //activate_tesla_radar(to_push->RIR,to_push->RDTR);
     activate_tesla_radar(to_push);
@@ -337,5 +319,5 @@ static void teslaradar_rx_hook(CANPacket_t *to_push)
     }
     return;
   }
-*/
+
 }
