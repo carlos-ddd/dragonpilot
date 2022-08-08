@@ -257,7 +257,6 @@ char radar_VIN[] = "                 "; //leave empty if your radar VIN matches 
 
  if (addr == MSG_TESLA_VIN) {
 
-   UNUSED(tesla_radar_vin_complete);
    UNUSED(radar_VIN);
    UNUSED(tesla_radar_can);
    UNUSED(tesla_radar_trigger_message_id);
@@ -308,7 +307,7 @@ char radar_VIN[] = "                 "; //leave empty if your radar VIN matches 
       return 0;
     }
   }
-
+  UNUSED(tesla_radar_vin_complete);
 
   // GAS PEDAL: safety check
   if (addr == MSG_GAS_COMMAND) {
