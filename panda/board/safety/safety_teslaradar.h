@@ -82,6 +82,15 @@ void can_send(CANPacket_t *to_push, uint8_t bus_number, bool skip_tx_hook);
 //static void send_fake_message(uint32_t RIR, uint32_t RDTR,int msg_len, int msg_addr, uint8_t bus_num, uint32_t data_lo, uint32_t data_hi) {
 static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, uint8_t bus_num, uint32_t data_lo, uint32_t data_hi) {
   UNUSED(received);     // legacy from former code
+  
+  UNUSED(msg_len);
+  UNUSED(msg_addr);
+  UNUSED(bus_num);
+  UNUSED(data_lo);
+  UNUSED(data_hi);
+  
+  
+  /*
   CANPacket_t to_send;
   to_send.bus = bus_num;
   to_send.data_len_code = msg_len;
@@ -95,6 +104,7 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   to_send.data[5] = ( (data_hi>>8) & 0xFF );
   to_send.data[6] = ( (data_hi>>18) & 0xFF );
   to_send.data[7] = ( (data_hi>>24) & 0xFF );
+  */
 /*
   CAN_FIFOMailBox_TypeDef to_send;
   uint32_t addr_mask = 0x001FFFFF;
@@ -103,7 +113,7 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   to_send.RDLR = data_lo;
   to_send.RDHR = data_hi;
 */
-  can_send(&to_send, bus_num, true);
+  //can_send(&to_send, bus_num, true);
 }
 
 static uint32_t radar_VIN_char(int pos, int shift) {
@@ -275,7 +285,7 @@ static void teslaradar_rx_hook(CANPacket_t *to_push)
 
   if ((addr == tesla_radar_trigger_message_id) && (bus_number == 1) && (tesla_radar_trigger_message_id > 0)) {
     //activate_tesla_radar(to_push->RIR,to_push->RDTR);
-    //activate_tesla_radar(to_push);
+    activate_tesla_radar(to_push);
     return;
   }
 
