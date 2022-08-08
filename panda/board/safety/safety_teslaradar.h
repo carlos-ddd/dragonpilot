@@ -95,8 +95,8 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   to_send.data_len_code = msg_len;
   to_send.extended = 0U;
   to_send.addr = msg_addr;
-  /*
   to_send.data[0] = ( data_lo & 0xFF );
+    /*
   to_send.data[1] = ( (data_lo>>8) & 0xFF );
   to_send.data[2] = ( (data_lo>>18) & 0xFF );
   to_send.data[3] = ( (data_lo>>24) & 0xFF );
