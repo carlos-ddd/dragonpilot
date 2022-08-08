@@ -105,7 +105,7 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   to_send.extended = 0U;
   to_send.addr = msg_addr;
   // data only until designated length or it will make panda stall!
-  for( int i=0 ; i<msg_len ; i++){
+  for( int i=0 ; i<4 ; i++){
       to_send.data[i] = data_temp[i];
   }
   //to_send.data[0] = ( data_lo & 0xFF );
