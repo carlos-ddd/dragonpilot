@@ -84,7 +84,7 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   UNUSED(received);     // legacy from former code
 
   //UNUSED(data_lo);
-  //UNUSED(data_hi);
+  UNUSED(data_hi);
   
   
 
@@ -99,11 +99,12 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   to_send.data[1] = ( (data_lo>>8) & 0xFF );
   to_send.data[2] = ( (data_lo>>18) & 0xFF );
   to_send.data[3] = ( (data_lo>>24) & 0xFF );
+  /*
   to_send.data[4] = ( data_hi & 0xFF );
   to_send.data[5] = ( (data_hi>>8) & 0xFF );
   to_send.data[6] = ( (data_hi>>18) & 0xFF );
   to_send.data[7] = ( (data_hi>>24) & 0xFF );
-
+  */
 /*
   CAN_FIFOMailBox_TypeDef to_send;
   uint32_t addr_mask = 0x001FFFFF;
