@@ -124,6 +124,7 @@ static uint32_t radar_VIN_char(int pos, int shift) {
   return (((int)radar_VIN[pos]) << (shift * 8));
 }
 
+/*
 //static void activate_tesla_radar(uint32_t RIR, uint32_t RDTR) {
 static void activate_tesla_radar(CANPacket_t *received) {
     //if we did not receive the VIN or no request to activate radar, then return
@@ -256,6 +257,7 @@ static void activate_tesla_radar(CANPacket_t *received) {
     tesla_radar_counter = tesla_radar_counter % 100;
 }
 
+*/
 static void teslaradar_rx_hook(CANPacket_t *to_push)
 {
   uint8_t bus_number = GET_BUS(to_push);
