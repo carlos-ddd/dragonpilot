@@ -81,7 +81,7 @@ void can_send(CANPacket_t *to_push, uint8_t bus_number, bool skip_tx_hook);
 
 //static void send_fake_message(uint32_t RIR, uint32_t RDTR,int msg_len, int msg_addr, uint8_t bus_num, uint32_t data_lo, uint32_t data_hi) {
 static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, uint8_t bus_num, uint32_t data_lo, uint32_t data_hi) {
-  UNUSED(received)
+  UNUSED(received);     // legacy from former code
   CANPacket_t to_send;
   to_send.bus = bus_num;
   to_send.data_len_code = msg_len;
