@@ -56,14 +56,15 @@ static int add_tesla_crc(uint32_t MLB, uint32_t MHB , int msg_len) {
   return crc;
 }
 
-static int add_tesla_cksm(CAN_FIFOMailBox_TypeDef *msg , int msg_id, int msg_len) {
+//static int add_tesla_cksm(CAN_FIFOMailBox_TypeDef *msg , int msg_id, int msg_len) {
+static int add_tesla_cksm(uint32_t dl, uint32_t dh, int msg_id, int msg_len) {
   int cksm = (0xFF & msg_id) + (0xFF & (msg_id >> 8));
   for (int x = 0; x < msg_len; x++) {
     int v = 0;
     if (x <= 3) {
-      v = (msg->RDLR >> (x * 8)) & 0xFF;
+      v = (dl >> (x * 8)) & 0xFF;
     } else {
-      v = (msg->RDHR >> ( (x-4) * 8)) & 0xFF;
+      v = (dh >> ( (x-4) * 8)) & 0xFF;
     }
     cksm = (cksm + v) & 0xFF;
   }
@@ -71,10 +72,11 @@ static int add_tesla_cksm(CAN_FIFOMailBox_TypeDef *msg , int msg_id, int msg_len
 }
 
 static int add_tesla_cksm2(uint32_t dl, uint32_t dh, int msg_id, int msg_len) {
-  CAN_FIFOMailBox_TypeDef to_check;
-  to_check.RDLR = dl;
-  to_check.RDHR = dh;
-  return add_tesla_cksm(&to_check,msg_id,msg_len);
+//  CAN_FIFOMailBox_TypeDef to_check;
+//  to_check.RDLR = dl;
+//  to_check.RDHR = dh;
+  return add_tesla_cksm(dl,dh,msg_id,msg_len);
+  //return add_tesla_cksm(&to_check,msg_id,msg_len);
 }
 
 void can_send(CANPacket_t *to_push, uint8_t bus_number, bool skip_tx_hook);
@@ -104,7 +106,7 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   to_send.data_len_code = msg_len;
   to_send.extended = 0U;
   to_send.addr = msg_addr;
-  // data only until designated length or it will make panda stall!
+  // data only until designated length
   for( int i=0 ; i<msg_len ; i++){
       to_send.data[i] = data_temp[i];
   }
