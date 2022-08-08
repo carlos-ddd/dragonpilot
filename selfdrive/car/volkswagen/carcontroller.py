@@ -15,8 +15,11 @@ class CarController():
     self.blinker_end_frame = 0.
 
     self.apply_steer_last = 0
+    
     self.mobPreEnable = False
     self.mobEnabled = False
+    self.mobBrakingProhibited = True
+    
     self.radarVin_idx = 0
 
     self.coastingAccel = -0.42735
@@ -142,10 +145,29 @@ class CarController():
       mobBrakeScaling = 650
       mobBrakeMax = min(8190, 8000)
       # TODO make sure we use the full 8190 when calculating braking.
-      apply_brake = actuators.brake * mobBrakeScaling
+      
+      if actuators.accel < 0:   # 0 ... -3.5m/s^2   (braking = neg. acceleration)
+        apply_brake = abs(actuators.accel)
+        apply_brake *= mobBrakeScaling
+      else:
+        apply_brake = 0
+
       stopping_wish = False
 
-      if enabled:
+      # safety to stop any braking when gas pedal is pressed
+      # only needed for no-disengage-on-gas situations
+      if CS.out.gasPressed:
+        # if OP wants to brake during gas pedal pressed
+        self.mobBrakingProhibited = True
+      elif self.mobBrakingProhibited:
+        # gas not pressed (any more) but has been
+        # now to reenable braking we need to have reached a safe (soft) braking region
+        # or the release of the gas pedal could make for an immediate hard braking
+        # which has (obviously) built up in the background (remember: OP wanted to brake)
+        if (apply_brake < 300) and (actuators.accel > -0.5):    # MOB-raw, ms/2
+          self.mobBrakingProhibited = False     # allow braking again
+
+      if enabled: # and not self.mobBrakingProhibited:
         if (apply_brake < 0):
           apply_brake = 0
         if apply_brake > 0:

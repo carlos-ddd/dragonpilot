@@ -307,8 +307,8 @@ class CarState(CarStateBase):
     
     # collect HCA_1 steering-data from stock HCA camera (MFK)
     self.stock_HCA_Status = int(cam_cp.vl["HCA_1"]['HCA_Status'])
-    self.stock_HCA_LM_Offset = int(cam_cp.vl["HCA_1"]['LM_Offset'])
-    self.stock_HCA_LM_OffSign = bool(cam_cp.vl["HCA_1"]['LM_OffSign'])
+    stock_HCA_LM_Offset = int(cam_cp.vl["HCA_1"]['LM_Offset'])
+    stock_HCA_LM_OffSign = bool(cam_cp.vl["HCA_1"]['LM_OffSign'])
     self.stock_HCA_SteeringVal =  int(-1 * stock_HCA_LM_Offset) if stock_HCA_LM_OffSign else stock_HCA_LM_Offset    # if sign bit is set -> neg. value
 
     # Update ACC setpoint. When the setpoint reads as 255, the driver has not
