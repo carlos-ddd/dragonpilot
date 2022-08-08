@@ -241,10 +241,20 @@ static int volkswagen_pq_tx_hook(CANPacket_t *to_send) {
     }
   }
 
-#ifdef VW_USE_TESLA_RADAR
  // Tesla Radar TX hook
- //check if this is a teslaradar vin message
- //capture message for radarVIN and settings
+ // check if this is a teslaradar vin message
+ // capture message for radarVIN and settings
+ // Tesla Radar advertising its VIN, position and EPAS-type
+ //  those need to be sent to it later on
+
+// cave: debug only
+int tesla_radar_should_send = 0; //set to 1 from EON via fake message when we want to use it
+int radarPosition = 0;
+int radarEpasType = 0;
+uint32_t tesla_radar_trigger_message_id = 0x4A0; //id of the message
+uint8_t tesla_radar_can = 2; // 0, 1 or 2 set from EON via fake message
+char radar_VIN[] = "                 "; //leave empty if your radar VIN matches the car VIN
+
  if (addr == MSG_TESLA_VIN) {
 
    int id = ( GET_BYTE(to_send, 0) );
@@ -290,7 +300,7 @@ static int volkswagen_pq_tx_hook(CANPacket_t *to_send) {
       return 0;
     }
   }
-#endif
+
 
   // GAS PEDAL: safety check
   if (addr == MSG_GAS_COMMAND) {
