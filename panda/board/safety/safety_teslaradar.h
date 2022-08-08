@@ -82,20 +82,20 @@ void can_send(CANPacket_t *to_push, uint8_t bus_number, bool skip_tx_hook);
 //static void send_fake_message(uint32_t RIR, uint32_t RDTR,int msg_len, int msg_addr, uint8_t bus_num, uint32_t data_lo, uint32_t data_hi) {
 static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, uint8_t bus_num, uint32_t data_lo, uint32_t data_hi) {
   UNUSED(received);     // legacy from former code
-  
-  UNUSED(msg_len);
-  UNUSED(msg_addr);
-  UNUSED(bus_num);
+
   UNUSED(data_lo);
   UNUSED(data_hi);
   
   
-  /*
+
   CANPacket_t to_send;
+  to_send.returned = 0U;
+  to_send.rejected = 0U;
   to_send.bus = bus_num;
   to_send.data_len_code = msg_len;
   to_send.extended = 0U;
   to_send.addr = msg_addr;
+  /*
   to_send.data[0] = ( data_lo & 0xFF );
   to_send.data[1] = ( (data_lo>>8) & 0xFF );
   to_send.data[2] = ( (data_lo>>18) & 0xFF );
@@ -113,7 +113,7 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   to_send.RDLR = data_lo;
   to_send.RDHR = data_hi;
 */
-  //can_send(&to_send, bus_num, true);
+  can_send(&to_send, to_send.bus, true);
 }
 
 static uint32_t radar_VIN_char(int pos, int shift) {
