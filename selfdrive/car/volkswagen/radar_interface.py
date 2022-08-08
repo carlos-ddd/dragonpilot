@@ -259,6 +259,7 @@ class RadarInterface(RadarInterfaceBase):
         # BB: Only trigger canError for 3 consecutive errors
         if self.canErrorCounter > 9:
             ret.errors = errors
+            print(">>> radar_interface.py: CAN-Error triggered! canErrorCounter", canErrorCounter)
         else:
             ret.errors = []
         return ret, self.extPts.values(), AHB_car_detected
