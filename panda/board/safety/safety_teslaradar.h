@@ -275,7 +275,7 @@ static void teslaradar_rx_hook(CANPacket_t *to_push)
 
   if ((addr == tesla_radar_trigger_message_id) && (bus_number == 1) && (tesla_radar_trigger_message_id > 0)) {
     //activate_tesla_radar(to_push->RIR,to_push->RDTR);
-    activate_tesla_radar(to_push);
+    //activate_tesla_radar(to_push);
     return;
   }
 

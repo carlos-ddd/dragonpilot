@@ -1,9 +1,6 @@
-//#define VW_USE_TESLA_RADAR
-
-#ifdef VW_USE_TESLA_RADAR
 // Include Tesla radar safety code
 #include "safety_teslaradar.h"
-#endif
+
 
 // Safety-relevant steering constants for Volkswagen
 const int VOLKSWAGEN_PQ_MAX_STEER = 300;                // 3.0 Nm (EPS side max of 3.0Nm with fault if violated)
@@ -96,9 +93,7 @@ static int volkswagen_pq_rx_hook(CANPacket_t *to_push) {
   bool valid = addr_safety_check(to_push, &volkswagen_pq_rx_checks,
                                 volkswagen_pq_get_checksum, volkswagen_pq_compute_checksum, volkswagen_pq_get_counter);
 
-#ifdef VW_USE_TESLA_RADAR
   teslaradar_rx_hook(to_push);
-#endif
 
   if (valid) {
     int addr = GET_ADDR(to_push);
@@ -248,6 +243,7 @@ static int volkswagen_pq_tx_hook(CANPacket_t *to_send) {
  //  those need to be sent to it later on
 
 // cave: debug only
+/*
 int tesla_radar_should_send = 0; //set to 1 from EON via fake message when we want to use it
 int radarPosition = 0;
 int radarEpasType = 0;
@@ -255,9 +251,9 @@ uint32_t tesla_radar_trigger_message_id = 0x4A0; //id of the message
 uint8_t tesla_radar_can = 2; // 0, 1 or 2 set from EON via fake message
 char radar_VIN[] = "                 "; //leave empty if your radar VIN matches the car VIN
 int tesla_radar_vin_complete = 0; //set to 7 when complete vin is received
-
+*/
  if (addr == MSG_TESLA_VIN) {
-
+/*
    UNUSED(radar_VIN);
    UNUSED(tesla_radar_can);
    UNUSED(tesla_radar_trigger_message_id);
@@ -265,7 +261,7 @@ int tesla_radar_vin_complete = 0; //set to 7 when complete vin is received
    UNUSED(radarPosition);
    UNUSED(tesla_radar_should_send);
    UNUSED(tesla_radar_vin_complete);
-
+*/
    int id = ( GET_BYTE(to_send, 0) );
    int radarVin_b1 = ( GET_BYTE(to_send, 1) );
    int radarVin_b2 = ( GET_BYTE(to_send, 2) );
