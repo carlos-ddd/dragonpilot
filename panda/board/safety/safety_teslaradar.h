@@ -84,17 +84,17 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   UNUSED(received);     // legacy from former code
 
   //UNUSED(data_lo);
-  //UNUSED(data_hi);
+  UNUSED(data_hi);
   
   unsigned char data_temp[8];
   data_temp[0] = ( data_lo & 0xFF );
   data_temp[1] = ( (data_lo>>8) & 0xFF );
   data_temp[2] = ( (data_lo>>18) & 0xFF );
   data_temp[3] = ( (data_lo>>24) & 0xFF );
-  data_temp[4] = ( data_hi & 0xFF );
-  data_temp[5] = ( (data_hi>>8) & 0xFF );
-  data_temp[6] = ( (data_hi>>18) & 0xFF );
-  data_temp[7] = ( (data_hi>>24) & 0xFF );
+  data_temp[4] = 88; //( data_hi & 0xFF );
+  data_temp[5] = 88; //( (data_hi>>8) & 0xFF );
+  data_temp[6] = 88; //( (data_hi>>18) & 0xFF );
+  data_temp[7] = 88; //( (data_hi>>24) & 0xFF );
   
 
   CANPacket_t to_send;
@@ -105,7 +105,7 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   to_send.extended = 0U;
   to_send.addr = msg_addr;
   // data only until designated length or it will make panda stall!
-  for( int i=0 ; i<4 ; i++){
+  for( int i=0 ; i<msg_len ; i++){
       to_send.data[i] = data_temp[i];
   }
   //to_send.data[0] = ( data_lo & 0xFF );
