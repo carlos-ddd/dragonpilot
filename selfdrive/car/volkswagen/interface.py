@@ -39,7 +39,8 @@ class CarInterface(CarInterfaceBase):
         ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.volkswagenPq)]
 
         # Determine installed network location and trans type from fingerprint
-        ret.networkLocation = NetworkLocation.fwdCamera if 0x368 in fingerprint[0] else NetworkLocation.gateway # carlos-ddd: 0x368 = mACC_System
+        #ret.networkLocation = NetworkLocation.fwdCamera if 0x368 in fingerprint[0] else NetworkLocation.gateway # carlos-ddd: 0x368 = mACC_System
+        ret.networkLocation = NetworkLocation.gateway # carlos-ddd forced
         if 0x440 in fingerprint[0]:  # Getriebe_1
           ret.transmissionType = TransmissionType.automatic
           print(">>> (3) interface.py: automatic transmission detected")
