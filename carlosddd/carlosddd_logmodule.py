@@ -21,8 +21,9 @@ class Carlosddd_Logmodule:
         self.log_filename_csv = self.log_path + "/csv/" + self.filename + ".csv"
         self.first_run_csv = True
         self.first_run_octave = True
+        self.json_path = "/data/openpilot/carlosddd/config.json"
         self.cnt = 0
-        with open('config.json', 'r') as f:
+        with open(self.json_path, 'r') as f:
             json_data = json.load(f)
         self.parse_json(json_data)
         #print(self.config_print_output, self.config_output_octave, self.config_output_csv)
