@@ -147,7 +147,7 @@ class CarController():
     if (frame % P.MOB_STEP == 0) and CS.CP.enableGasInterceptor:
       mobEnabled = self.mobEnabled
       mobPreEnable = self.mobPreEnable
-      mobBrakeScaling = 650
+      mobBrakeScaling = 250
       mobBrakeMax = min(8190, 8000)
       # TODO make sure we use the full 8190 when calculating braking.
       
