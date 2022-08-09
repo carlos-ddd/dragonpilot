@@ -494,8 +494,8 @@ class CarController():
     new_actuators.steer = self.apply_steer_last / P.STEER_MAX
 
     if CdddL_hook:
-        self.CdddL.update('vEgo', CS.vEgo)
-        self.CdddL.update('aEgo', CS.aEgo)
+        self.CdddL.update('vEgo', CS.out.vEgo)
+        self.CdddL.update('aEgo', CS.out.aEgo)
         self.CdddL.update('final_accel', actuators.accel)
         self.CdddL.update('apply_brake', apply_brake)
         self.CdddL.update('apply_gas', apply_gas)
