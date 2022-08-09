@@ -14,14 +14,15 @@ class Carlosddd_Logmodule:
         self.idx = 0
         self.max_slices = max_slices
         self.startup_ts = self.get_ts_now(with_date=True)
-        self.log_path = "logs"
+        self.abs_path = "/data/openpilot/carlosddd/"
+        self.log_path = self.abs_path + "logs/"
         self.name = name
         self.filename = self.name + "_" + self.startup_ts + "_log"
-        self.log_filename_octave = self.log_path + "/octave/" + self.filename + ".m"
-        self.log_filename_csv = self.log_path + "/csv/" + self.filename + ".csv"
+        self.log_filename_octave = self.log_path + "octave/" + self.filename + ".m"
+        self.log_filename_csv = self.log_path + "csv/" + self.filename + ".csv"
         self.first_run_csv = True
         self.first_run_octave = True
-        self.json_path = "/data/openpilot/carlosddd/config.json"
+        self.json_path = self.abs_path + "config.json"
         self.cnt = 0
         with open(self.json_path, 'r') as f:
             json_data = json.load(f)
