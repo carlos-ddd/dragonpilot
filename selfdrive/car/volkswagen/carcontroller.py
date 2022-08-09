@@ -5,6 +5,7 @@ from selfdrive.car.volkswagen import volkswagencan
 from selfdrive.car.volkswagen.values import PQ_CARS, DBC_FILES, CANBUS, MQB_LDW_MESSAGES, BUTTON_STATES, PQ_LDW_MESSAGES, CarControllerParams as P
 from opendbc.can.packer import CANPacker
 from common.dp_common import common_controller_ctrl
+from carlosddd.carlosddd_logmodule import Carlosddd_Logmodule
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
@@ -53,9 +54,13 @@ class CarController():
 
     self.steer_rate_limited = False
 
+    self.CdddL = Carlosddd_Logmodule("LoC")
+
 
   def update(self, c, enabled, CS, frame, ext_bus, actuators, visual_alert, audible_alert, left_lane_visible, right_lane_visible, left_lane_depart, right_lane_depart, dragonconf):
     """ Controls thread """
+
+    CdddL_hook = False
 
     # Send CAN commands.
     can_sends = []
@@ -196,28 +201,32 @@ class CarController():
       self.mobPreEnable = mobPreEnable
       self.mobEnabled = mobEnabled
       can_sends.append(self.create_braking_control(self.packer_pt, CANBUS.br, apply_brake, idx, mobEnabled, mobPreEnable, stopping_wish))
+      CdddL_hook = True
+    else:
+      apply_brake = float('nan')    # for CdddL
 
-      # --------------------------------------------------------------------------
-      #                                                                         #
-      # Prepare PQ_AWV for Front Assist LED and Front Assist Text               #
-      #   Front Assist warning sign + sound + brake jolt                        #
-      #                                                                         #
-      # --------------------------------------------------------------------------
-      if (frame % P.AWV_STEP == 0) and CS.CP.enableGasInterceptor:
-        send_fcw = visual_alert == car.CarControl.HUDControl.VisualAlert.fcw
-        green_led = 1 if enabled and (CS.ABSWorking == 0) else 0
-        orange_led = 1 if self.mobPreEnable and self.mobEnabled else 0
-        if enabled:
-          braking_working = 0 if (CS.ABSWorking == 0) else 5
-        else:
-          braking_working = 0
-        brakejolt_type = 0 # select depending on speed (which are to be determined) for the driver to feel the same jolt intensity
-        brake_jolt = False # 2do: pass through from interface.py
+    # --------------------------------------------------------------------------
+    #                                                                         #
+    # Prepare PQ_AWV for Front Assist LED and Front Assist Text               #
+    #   Front Assist warning sign + sound + brake jolt                        #
+    #                                                                         #
+    # --------------------------------------------------------------------------
+    if (frame % P.AWV_STEP == 0) and CS.CP.enableGasInterceptor:
+      send_fcw = visual_alert == car.CarControl.HUDControl.VisualAlert.fcw
+      green_led = 1 if enabled and (CS.ABSWorking == 0) else 0
+      orange_led = 1 if self.mobPreEnable and self.mobEnabled else 0
+      if enabled:
+        braking_working = 0 if (CS.ABSWorking == 0) else 5
+      else:
+        braking_working = 0
+      brakejolt_type = 0 # select depending on speed (which are to be determined) for the driver to feel the same jolt intensity
+      brake_jolt = False # 2do: pass through from interface.py
 
-        idx = (frame / P.MOB_STEP) % 16
+      idx = (frame / P.MOB_STEP) % 16
 
-        can_sends.append(
-          self.create_awv_control(self.packer_pt, CANBUS.pt, idx, orange_led, green_led, braking_working, send_fcw, send_fcw, brakejolt_type, brake_jolt))
+      can_sends.append(
+        self.create_awv_control(self.packer_pt, CANBUS.pt, idx, orange_led, green_led, braking_working, send_fcw, send_fcw, brakejolt_type, brake_jolt))
+
 
 #      # --------------------------------------------------------------------------
 #      #                                                                         #
@@ -371,7 +380,12 @@ class CarController():
           apply_gas = 0
         # END new Edgy
 
+        apply_gas = int(apply_gas)
+
       can_sends.append(self.create_gas_control(self.packer_pt, CANBUS.cam, apply_gas, frame // 2))
+      CdddL_hook = True
+    else:
+      apply_brake = float('nan')    # for CdddL
 
     # --------------------------------------------------------------------------
     #                                                                         #
@@ -397,14 +411,6 @@ class CarController():
 
     # The factory camera emits this message at 10Hz. When OP is active, Panda
     # filters LDW_02 from the factory camera and OP emits LDW_02 at 10Hz.
-
-
-
-
-
-
-
-
 
 
     # **** HUD Controls ***************************************************** #
@@ -486,5 +492,13 @@ class CarController():
 
     new_actuators = actuators.copy()
     new_actuators.steer = self.apply_steer_last / P.STEER_MAX
+
+    if CdddL_hook:
+        self.CdddL.update('vEgo', CS.vEgo)
+        self.CdddL.update('aEgo', CS.aEgo)
+        self.CdddL.update('final_accel', actuators.accel)
+        self.CdddL.update('apply_brake', apply_brake)
+        self.CdddL.update('apply_gas', apply_gas)
+        self.CdddL.slice_done()
 
     return new_actuators, can_sends

@@ -1,0 +1,6 @@
+{ 
+    "output_prints": true,
+    "output_octave": true,
+    "output_csv": false,
+    "csv_seperator": ","
+}

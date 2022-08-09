@@ -277,7 +277,7 @@ class CarState(CarStateBase):
     # We use the speed preference for OP.
     self.displayMetricUnits = not pt_cp.vl["Einheiten_1"]["MFA_v_Einheit_02"]
 
-    self.engineRPM = pt_cp.vl["Motor_1"]['Motordrehzahl']
+    ret.engineRPM = pt_cp.vl["Motor_1"]['Motordrehzahl']
 
     # Consume blind-spot monitoring info/warning LED states, if available. The
     # info signal (LED on) is enabled whenever a vehicle is detected in the
