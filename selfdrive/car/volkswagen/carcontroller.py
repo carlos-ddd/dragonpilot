@@ -6,6 +6,7 @@ from selfdrive.car.volkswagen.values import PQ_CARS, DBC_FILES, CANBUS, MQB_LDW_
 from opendbc.can.packer import CANPacker
 from common.dp_common import common_controller_ctrl
 from carlosddd.carlosddd_logmodule import Carlosddd_Logmodule
+from carlosddd.carlosddd_acceltest import Carlosddd_Acceltest
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
@@ -55,12 +56,15 @@ class CarController():
     self.steer_rate_limited = False
 
     self.CdddL = Carlosddd_Logmodule("LoC")
+    self.CdddA = Carlosddd_Acceltest()
 
 
   def update(self, c, enabled, CS, frame, ext_bus, actuators, visual_alert, audible_alert, left_lane_visible, right_lane_visible, left_lane_depart, right_lane_depart, dragonconf):
     """ Controls thread """
 
     CdddL_hook = False
+
+    cddda_apply_gas, cddda_apply_brake, cddda_active = CdddA.update(enabled, CS.out.vEgo, CS.out.aEgo, CS.out.clutchPressed, CS.out.gasPressed, gear=0, CS.out.engineRPM)
 
     # Send CAN commands.
     can_sends = []
@@ -147,8 +151,8 @@ class CarController():
     if (frame % P.MOB_STEP == 0) and CS.CP.enableGasInterceptor:
       mobEnabled = self.mobEnabled
       mobPreEnable = self.mobPreEnable
-      mobBrakeScaling = 250
-      mobBrakeMax = min(8190, 8000)
+      mobBrakeScaling = 150
+      mobBrakeMax = min(8190, 8190)
       # TODO make sure we use the full 8190 when calculating braking.
       
       if actuators.accel < 0:   # 0 ... -3.5m/s^2   (braking = neg. acceleration)
@@ -156,6 +160,10 @@ class CarController():
         apply_brake *= mobBrakeScaling
       else:
         apply_brake = 0
+
+      # acceleration test module output
+      if cddda_active:  # overwrite
+        apply_brake = cddda_apply_brake
 
       stopping_wish = False
 
@@ -379,6 +387,12 @@ class CarController():
         else:
           apply_gas = 0
         # END new Edgy
+
+
+        # acceleration test module output
+        if cddda_active:  # overwrite
+          apply_gas = cddda_apply_gas
+
 
         apply_gas = int(apply_gas)
 

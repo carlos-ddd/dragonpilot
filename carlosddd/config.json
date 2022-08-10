@@ -1,6 +1,6 @@
 { 
-    "output_prints": true,
-    "output_octave": true,
+    "output_prints": false,
+    "output_octave": false,
     "output_csv": false,
     "csv_seperator": ","
 }
