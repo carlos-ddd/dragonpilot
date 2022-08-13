@@ -2,7 +2,7 @@
 import os
 import json
 from common.colors import COLORS
-from common.travis_checker import BASEDIR
+# from common.travis_checker import BASEDIR
 from atomicwrites import atomic_write
 try:
   from common.realtime import sec_since_boot
@@ -16,7 +16,8 @@ error = lambda msg: print('{}opParams ERROR: {}{}'.format(COLORS.FAIL, msg, COLO
 NUMBER = [float, int]  # value types
 NONE_OR_NUMBER = [type(None), float, int]
 
-BASEDIR = os.path.dirname(BASEDIR)
+# BASEDIR = os.path.dirname(BASEDIR)
+BASEDIR = os.path.dirname("/data")
 PARAMS_DIR = os.path.join(BASEDIR, 'community', 'params')
 IMPORTED_PATH = os.path.join(PARAMS_DIR, '.imported')
 OLD_PARAMS_FILE = os.path.join(BASEDIR, 'op_params.json')

@@ -64,7 +64,7 @@ class CarController():
 
     CdddL_hook = False
 
-    cddda_apply_gas, cddda_apply_brake, cddda_active = CdddA.update(enabled, CS.out.vEgo, CS.out.aEgo, CS.out.clutchPressed, CS.out.gasPressed, gear=0, CS.out.engineRPM)
+    cddda_apply_gas, cddda_apply_brake, cddda_active = self.CdddA.update(enabled, CS.out.vEgo, CS.out.aEgo, CS.out.clutchPressed, CS.out.gasPressed, 0, CS.out.engineRPM)
 
     # Send CAN commands.
     can_sends = []
