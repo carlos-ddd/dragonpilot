@@ -64,7 +64,7 @@ class CarController():
 
     CdddL_hook = False
 
-    cddda_apply_gas, cddda_apply_brake, cddda_active = self.CdddA.update(enabled, CS.out.vEgo, CS.out.aEgo, CS.out.clutchPressed, CS.out.gasPressed, 0, CS.out.engineRPM)
+    cddda_apply_gas, cddda_apply_brake, cddda_active = self.CdddA.update(enabled, CS.out.vEgo, CS.out.aEgo, CS.out.clutchPressed, CS.out.gasPressed, CS.detected_gear, CS.out.engineRPM)
 
     # Send CAN commands.
     can_sends = []
@@ -513,6 +513,7 @@ class CarController():
         self.CdddL.update('final_accel', actuators.accel)
         self.CdddL.update('apply_brake', apply_brake)
         self.CdddL.update('apply_gas', apply_gas)
+        self.CdddL.update('gear', CS.detected_gear)
         self.CdddL.slice_done()
 
     return new_actuators, can_sends

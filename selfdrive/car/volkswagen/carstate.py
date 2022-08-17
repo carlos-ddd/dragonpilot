@@ -12,6 +12,9 @@ class CarState(CarStateBase):
     super().__init__(CP)
 
     self.ACC = PQacc()
+    
+    self.enforce_CAN_checks = False
+    print(">>> carstate.py::enforce_CAN_checks:", self.enforce_CAN_checks)
 
     ### START OF MAIN CONFIG OPTIONS ###
     ### Do NOT modify here, modify in /data/bb_openpilot.cfg and reboot
@@ -35,6 +38,7 @@ class CarState(CarStateBase):
       # CS.get_cam_can_parser() -> self.cp_cam
       self.get_can_parser = self.get_pq_can_parser
       self.get_cam_can_parser = self.get_pq_cam_can_parser
+      self.get_body_can_parser = self.get_pq_body_can_parser
       # [CS.get_body_can_parser() -> self.cp_body]
       # [CS.get_loopback_can_parser() -> I guess only needed for testing]
       self.update = self.update_pq
@@ -277,7 +281,11 @@ class CarState(CarStateBase):
     # We use the speed preference for OP.
     self.displayMetricUnits = not pt_cp.vl["Einheiten_1"]["MFA_v_Einheit_02"]
 
-    ret.engineRPM = pt_cp.vl["Motor_1"]['Motordrehzahl']
+    self.detected_gear = acc_cp.vl["Getriebe_2"]['Ganganzeige_Kombi___Getriebe_Va']
+    self.desired_gear = acc_cp.vl["Getriebe_2"]['eingelegte_Fahrstufe']
+
+    #ret.engineRPM = pt_cp.vl["Motor_1"]['Motordrehzahl']
+    ret.engineRPM = 1000 + (self.detected_gear*10) + self.desired_gear  # for debugging only!
 
     # Consume blind-spot monitoring info/warning LED states, if available. The
     # info signal (LED on) is enabled whenever a vehicle is detected in the
@@ -313,9 +321,9 @@ class CarState(CarStateBase):
 
     # Update ACC setpoint. When the setpoint reads as 255, the driver has not
     # yet established an ACC setpoint, so treat it as zero.
-    ret.cruiseState.speed = acc_cp.vl["ACC_GRA_Anziege"]['ACA_V_Wunsch'] * CV.KPH_TO_MS
-    if ret.cruiseState.speed > 70:  # 255 kph in m/s == no current setpoint
-      ret.cruiseState.speed = 0
+    #ret.cruiseState.speed = acc_cp.vl["ACC_GRA_Anziege"]['ACA_V_Wunsch'] * CV.KPH_TO_MS
+    #if ret.cruiseState.speed > 70:  # 255 kph in m/s == no current setpoint
+    #  ret.cruiseState.speed = 0
 
     # Update control button states for turn signals and ACC controls.
     self.buttonStates["accelCruise"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Up_kurz'])# or bool(pt_cp.vl["GRA_Neu"]['GRA_Up_lang'])
@@ -567,7 +575,7 @@ class CarState(CarStateBase):
     print(">>> (7) carstate.py: CAN checks and signals for get_pq_can_parser() (not get_pq_cam_can_parser()):")
     print(">>> carstate.py::pq::signals", signals)
     print(">>> carstate.py::pq::checks", checks)
-    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.pt, False)    # -> assign to CANBUS.pt (can0 see values.py)
+    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.pt, self.enforce_CAN_checks)    # -> assign to CANBUS.pt (can0 see values.py)
 
   @staticmethod
   def get_mqb_cam_can_parser(CP):
@@ -637,7 +645,21 @@ class CarState(CarStateBase):
     print(">>> (11) carstate.py::get_pq_cam_can_parser(): CAN checks and signals (get_pq_cam_can_parser()):")
     print(">>> carstate.py::pq::signals", signals)
     print(">>> carstate.py::pq::checks", checks)
-    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.cam, False)    # -> assign to CANBUS.cam (can2 see values.py)
+    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.cam, self.enforce_CAN_checks)    # -> assign to CANBUS.cam (can2 see values.py)
+
+  @staticmethod
+  def get_pq_body_can_parser(CP):
+    signals = []
+    checks = []
+    if CP.transmissionType == TransmissionType.manual:
+      signals += [  ("Ganganzeige_Kombi___Getriebe_Va", "Getriebe_2"),    # gear ECU detected
+                    ("eingelegte_Fahrstufe", "Getriebe_2"),    # gear ECU wants (desired gear)
+                ]
+      checks += [("Getriebe_2", 10)]  # From J428 ACC radar control module
+    print(">>> (12) carstate.py::get_pq_body_can_parser(): CAN checks and signals (get_pq_body_can_parser()):")
+    print(">>> carstate.py::pq::signals", signals)
+    print(">>> carstate.py::pq::checks", checks)
+    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.br, self.enforce_CAN_checks)    # -> assign to CANBUS.br (can1 see values.py)
 
 class PqExtraSignals:
   # Additional signal and message lists for optional or bus-portable controllers

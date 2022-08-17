@@ -14,16 +14,34 @@ class CarInterface(CarInterfaceBase):
     self.displayMetricUnitsPrev = None
     self.buttonStatesPrev = BUTTON_STATES.copy()
 
-    # CAN bus / parser definition
+    # CAN bus / parser definition see interfaces.py (NOT interface.py -> generic, not car specific!)
+    # there is define: cp, cp_cam, cp_body, cp_loopback
     # CS.update()
     if CP.networkLocation == NetworkLocation.fwdCamera:
+      # DOES NOT APPLY FOR carlos_ddd !
       print(">>> (0) interface.py: networklocation.fwdCamera")
-      self.ext_bus = CANBUS.pt
+      self.ext_bus = CANBUS.pt  # CANBUS.pt=can0=at CAN-GW (see values.py)
       self.cp_ext = self.cp
+
     else:   # carlos-ddd: that's where we are integrated (J533 CAN gateway)
       print(">>> (0) interface.py: networklocation-ELSE")
-      self.ext_bus = CANBUS.cam
-      self.cp_ext = self.cp_cam
+      # ext_bus is legacy for the ACC button hacking and is used in carcontrollser CC.update() but currently not used at all (keeping it as legacy)
+      #      ^
+      #      |
+      self.ext_bus = CANBUS.cam # CANBUS.cam=can2=isolated (MFK, SWA, Tesla-radar, pedal) (see values.py)
+#      self.cp_ext = self.cp_cam
+#      #      |
+#      #      v
+#      #    cp_ext is the third bus to be parsed in carstate.py CS.update() and a 100% copy of cp_cam at the moment
+      self.cp_ext = self.cp_body # carlos_ddd: powertrain tap
+
+    # the parsers are updated in the update()-function (see below in this file) with the CAN strings
+    # and then passed to     CS.update(..., self.cp, self.cp_cam, self.cp_ext, ...)
+    #                                          |      |             /
+    #                                          |      |            /
+    #                                          |      |           /
+    #                                          v      v         v/
+    # where they are calling update_pq(..., pt_cp, cam_cp, acc_cp, ...)
 
   @staticmethod
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), car_fw=None):
@@ -41,6 +59,7 @@ class CarInterface(CarInterfaceBase):
         # Determine installed network location and trans type from fingerprint
         #ret.networkLocation = NetworkLocation.fwdCamera if 0x368 in fingerprint[0] else NetworkLocation.gateway # carlos-ddd: 0x368 = mACC_System
         ret.networkLocation = NetworkLocation.gateway # carlos-ddd forced
+        print(">>> interface.py: forcing NetworkLocation:", str(ret.networkLocation))
         if 0x440 in fingerprint[0]:  # Getriebe_1
           ret.transmissionType = TransmissionType.automatic
           print(">>> (3) interface.py: automatic transmission detected")
@@ -271,12 +290,15 @@ class CarInterface(CarInterfaceBase):
     # anyway so we can test connectivity with can_valid
     self.cp.update_strings(can_strings)
     self.cp_cam.update_strings(can_strings)
+    self.cp_body.update_string(can_strings)
 
-    ret = self.CS.update(self.cp, self.cp_cam, self.cp_ext, self.CP.transmissionType)
+    #ret = self.CS.update(self.cp, self.cp_cam, self.cp_ext, self.CP.transmissionType)
+    ret = self.CS.update(self.cp, self.cp_cam, self.cp_body, self.CP.transmissionType)
+
     # dp
     self.dragonconf = dragonconf
     ret.cruiseState.enabled = common_interface_atl(ret, dragonconf.dpAtl)
-    ret.canValid = self.cp.can_valid and self.cp_cam.can_valid
+    ret.canValid = self.cp.can_valid and self.cp_cam.can_valid and self.cp_body.can_valid
     ret.steeringRateLimited = self.CC.steer_rate_limited if self.CC is not None else False
 
     # Check for and process state-change events (button press or release) from
