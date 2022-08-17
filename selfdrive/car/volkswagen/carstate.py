@@ -12,9 +12,6 @@ class CarState(CarStateBase):
     super().__init__(CP)
 
     self.ACC = PQacc()
-    
-    self.enforce_CAN_checks = False
-    print(">>> carstate.py::enforce_CAN_checks:", self.enforce_CAN_checks)
 
     ### START OF MAIN CONFIG OPTIONS ###
     ### Do NOT modify here, modify in /data/bb_openpilot.cfg and reboot
@@ -575,7 +572,7 @@ class CarState(CarStateBase):
     print(">>> (7) carstate.py: CAN checks and signals for get_pq_can_parser() (not get_pq_cam_can_parser()):")
     print(">>> carstate.py::pq::signals", signals)
     print(">>> carstate.py::pq::checks", checks)
-    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.pt, self.enforce_CAN_checks)    # -> assign to CANBUS.pt (can0 see values.py)
+    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.pt, False)    # -> assign to CANBUS.pt (can0 see values.py)
 
   @staticmethod
   def get_mqb_cam_can_parser(CP):
@@ -645,7 +642,7 @@ class CarState(CarStateBase):
     print(">>> (11) carstate.py::get_pq_cam_can_parser(): CAN checks and signals (get_pq_cam_can_parser()):")
     print(">>> carstate.py::pq::signals", signals)
     print(">>> carstate.py::pq::checks", checks)
-    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.cam, self.enforce_CAN_checks)    # -> assign to CANBUS.cam (can2 see values.py)
+    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.cam, False)    # -> assign to CANBUS.cam (can2 see values.py)
 
   @staticmethod
   def get_pq_body_can_parser(CP):
@@ -659,7 +656,7 @@ class CarState(CarStateBase):
     print(">>> (12) carstate.py::get_pq_body_can_parser(): CAN checks and signals (get_pq_body_can_parser()):")
     print(">>> carstate.py::pq::signals", signals)
     print(">>> carstate.py::pq::checks", checks)
-    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.br, self.enforce_CAN_checks)    # -> assign to CANBUS.br (can1 see values.py)
+    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.br, False)    # -> assign to CANBUS.br (can1 see values.py)
 
 class PqExtraSignals:
   # Additional signal and message lists for optional or bus-portable controllers
