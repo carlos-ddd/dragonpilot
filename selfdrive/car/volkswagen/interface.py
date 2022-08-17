@@ -110,7 +110,7 @@ class CarInterface(CarInterfaceBase):
     ret.lateralTuning.pid.kf = 0.00006
 #    ret.lateralTuning.pid.kpV = [0.6] # old [0.3]
 #    ret.lateralTuning.pid.kiV = [0.2] # old [0.1]
-    
+
 # PQ lateral tuning HCA_Status 7 carlos-ddd (old)
 #            km/h                 50   126
 #    ret.lateralTuning.pid.kpBP = [0., 14., 35.]
@@ -290,6 +290,7 @@ class CarInterface(CarInterfaceBase):
     # anyway so we can test connectivity with can_valid
     self.cp.update_strings(can_strings)
     self.cp_cam.update_strings(can_strings)
+    print(str(can_strings))
     if self.cp_body:
       self.cp_body.update_string(can_strings)
 
