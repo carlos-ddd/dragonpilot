@@ -469,11 +469,6 @@ class CarState(CarStateBase):
       signals += [("MO_Kuppl_schalter", "Motor_14"),  # Clutch switch
                   ("BCM1_Rueckfahrlicht_Schalter", "Gateway_72")]  # Reverse light from BCM
       checks.append(("Motor_14", 10))  # From J623 Engine control module
-      
-      signals += [  ("Ganganzeige_Kombi___Getriebe_Va", "Getriebe_2"),    # gear ECU detected
-                    ("eingelegte_Fahrstufe", "Getriebe_2"),    # gear ECU wants (desired gear)
-                ]
-      checks += [("Getriebe_2", 100)]  # From J428 ACC radar control module
 
     if CP.networkLocation == NetworkLocation.fwdCamera:
       # Radars are here on CANBUS.pt
@@ -561,6 +556,10 @@ class CarState(CarStateBase):
                   ("GK1_Rueckfahr", "Gate_Komf_1")]  # Reverse light from BCM
       checks += [("Motor_1", 100)]  # From J623 Engine control module
 #      checks += [("Getriebe_2", 100)]  # From J623 Engine control module (due to manual shift, there is no TCU so ECU emits it), signal probabaly not routed to ext-CAN!
+      signals += [  ("Ganganzeige_Kombi___Getriebe_Va", "Getriebe_2"),    # gear ECU detected
+                    ("eingelegte_Fahrstufe", "Getriebe_2"),    # gear ECU wants (desired gear)
+                ]
+      checks += [("Getriebe_2", 100)]  # From J428 ACC radar control module
       print(">>> (4) carstate.py: CAN checks for manual transmission added!")
 
     if CP.networkLocation == NetworkLocation.fwdCamera:
