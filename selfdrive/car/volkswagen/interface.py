@@ -290,7 +290,7 @@ class CarInterface(CarInterfaceBase):
     # anyway so we can test connectivity with can_valid
     self.cp.update_strings(can_strings)
     self.cp_cam.update_strings(can_strings)
-    print(str(can_strings))
+    #print(str(can_strings))
     if self.cp_body:
       self.cp_body.update_string(can_strings)
 

@@ -63,6 +63,7 @@ class CarState(CarStateBase):
 
       self.get_can_parser = self.get_mqb_can_parser
       self.get_cam_can_parser = self.get_mqb_cam_can_parser
+      self.get_body_can_parser = self.get_mqb_cam_can_parser
       self.update = self.update_mqb
 
       if CP.transmissionType == TransmissionType.automatic:
