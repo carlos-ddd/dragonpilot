@@ -137,7 +137,7 @@ class Carlosddd_Logmodule:
             log_file.write(out_str[:-1] + "\n") # remove last comma
         # write data
         for idx_d, d in enumerate(self.lst):
-            out_str = str(self.cnt+idx_d) + "," + self.lst_ts[idx_d]
+            out_str = str(self.cnt+idx_d) + "," + self.lst_ts[idx_d] + ","
             for idx_key, key in enumerate(known_keys):
                 if key in d:
                     out_str += str(d[key])

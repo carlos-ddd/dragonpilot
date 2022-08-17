@@ -39,6 +39,7 @@ class Carlosddd_Acceltest:
         self.update_op_params(gas_tests_allowable=True, brake_tests_allowable=True, initial_run=True, test_dict=test_dict)
 
         self.gas_test_wait_for_clutch = False
+        self.brake_test_wait_for_clutch = False
         self.gas_test_active = False
         self.brake_test_active = False
         if test_dict is None:
@@ -110,7 +111,7 @@ class Carlosddd_Acceltest:
     def update(self, op_enabled, vEgo, aEgo, clutchPressed, gasPressed, gear, rpm, test_dict=None):
         active = False
         gas_tests_allowable = (not op_enabled) and (not self.gas_test_active) and (not self.gas_test_scheduled) and (not self.gas_test_wait_for_clutch)
-        brake_tests_allowable = (not op_enabled) and (not self.brake_test_active) and (not self.brake_test_scheduled)
+        brake_tests_allowable = (not op_enabled) and (not self.brake_test_active) and (not self.brake_test_scheduled) and (not self.brake_test_wait_for_clutch)
         #print("op_enabled", op_enabled, "brake_test_active", self.brake_test_active, "brake_test_scheduled", self.brake_test_scheduled)
         #print("update_op_params(", gas_tests_allowable, "," , brake_tests_allowable, ")")
         self.update_op_params(gas_tests_allowable, brake_tests_allowable, initial_run=False, test_dict=test_dict)
@@ -120,7 +121,7 @@ class Carlosddd_Acceltest:
             if any([self.gas_test_active, self.brake_test_active]):
                 apply_gas = self.update_gas(vEgo, aEgo, clutchPressed, gear, rpm)
                 apply_brake = self.update_brake(vEgo, aEgo, clutchPressed, gasPressed)
-            elif ((clutchPressed and self.gas_test_scheduled) or self.gas_test_wait_for_clutch) and not self.brake_test_active:
+            elif ((clutchPressed and self.gas_test_scheduled) or self.gas_test_wait_for_clutch) and not self.brake_test_active and not self.brake_test_wait_for_clutch:
                 if self.gas_test_scheduled:
                     print(">>> carlosddd_acceltest.py: Waiting for gas test to begin, release clutch!")
                     # preactive (wait for clutch release)
@@ -135,27 +136,33 @@ class Carlosddd_Acceltest:
                         self.gas_log = open(self.logPath+"gasLog_"+str(self.get_ts_now(with_date=True))+"__"+str(int(vEgo))+"_to_"+str(int(self.target_speed_gas))+"__"+str(self.gas_val)+".m", 'a')
                         self.gas_log_open = True
                         self.gas_log_idx = 0
-                        self.gas_log.write("# log of accerleration test" + "\n")
+                        self.gas_log.write("# log of accerleration test to target_speed_gas=" + str(self.target_speed_gas) + "m/s" + "\n")
                         self.gas_log.write("apply_gas = " + str(self.gas_val) + "\n")
                         self.gas_log.write("inp_data" + str(self.gas_val) + " = [" + "\n")
-            elif clutchPressed and self.brake_test_scheduled and not self.gas_test_active and not self.gas_test_wait_for_clutch:
-                print(">>> carlosddd_acceltest.py: brake test beginning")
-                self.brake_test_active = True
-                self.brake_test_scheduled = False
-                self.brake_log = open(self.logPath+"brakeLog_"+str(self.get_ts_now(with_date=True))+"__"+str(int(vEgo))+"_to_"+str(int(self.target_speed_brake))+"__"+str(self.brake_val)+".m", 'a')
-                self.brake_log_open = True
-                self.brake_log_idx = 0
-                self.brake_log.write("# log of accerleration test" + "\n")
-                self.brake_log.write("apply_brake = " + str(self.brake_val) + "\n")
-                self.brake_log.write("inp_data" + str(self.brake_val) + " = [" + "\n")
+            elif ((clutchPressed and self.brake_test_scheduled) or self.brake_test_wait_for_clutch) and not self.gas_test_active and not self.gas_test_wait_for_clutch:
+                if self.brake_test_scheduled:
+                    print(">>> carlosddd_acceltest.py: Waiting for brake test to begin, release clutch!")
+                    self.brake_test_wait_for_clutch = True
+                    self.brake_test_scheduled = False
+                elif self.brake_test_wait_for_clutch:
+                    # become active
+                    if not clutchPressed:
+                        print(">>> carlosddd_acceltest.py: brake test beginning")
+                        self.brake_test_active = True
+                        self.brake_test_wait_for_clutch = False
+                        self.brake_log = open(self.logPath+"brakeLog_"+str(self.get_ts_now(with_date=True))+"__"+str(int(vEgo))+"_to_"+str(int(self.target_speed_brake))+"__"+str(self.brake_val)+".m", 'a')
+                        self.brake_log_open = True
+                        self.brake_log_idx = 0
+                        self.brake_log.write("# log of brake test downto target_speed_brake=" + str(self.target_speed_brake) + "m/s" + "\n")
+                        self.brake_log.write("apply_brake = " + str(self.brake_val) + "\n")
+                        self.brake_log.write("inp_data" + str(self.brake_val) + " = [" + "\n")
             active = self.gas_test_active or self.brake_test_active
         else:
             # disengage deactivates all active tests and all conditions for safety reasons!
             self.gas_test_active = False
             self.brake_test_active = False
             self.gas_test_wait_for_clutch = False
-
-
+            self.brake_test_wait_for_clutch = False
             if self.brake_log_open:
                 self.brake_log.close()
                 print(">>> carlosddd_acceltest.py: brake log closed() unexpectedly")
@@ -173,9 +180,10 @@ class Carlosddd_Acceltest:
         if self.gas_test_active and not self.brake_test_active:
             if not clutchPressed:   # allow for shifiting
                 apply_gas = self.gas_val
-                # log here
+                # log here (NORMAL testing state)
                 self.gas_log.write(str(self.gas_log_idx)+","+str(vEgo)+","+str(aEgo)+","+str(int(gear))+","+str(int(rpm))+";"+"\n")
             else:
+                # when clutch is pressed, do not apply gas
                 apply_gas = 0
                 self.gas_log.write(str(self.gas_log_idx)+","+str(vEgo)+","+"nan"+","+"nan"+","+str(int(rpm))+";"+"\n")
             if vEgo >= self.target_speed_gas:
@@ -183,8 +191,8 @@ class Carlosddd_Acceltest:
                 apply_gas = 0
                 self.gas_log.write("];" + "\n")
                 self.gas_log.write("idx = inp_data" + str(self.gas_val) + "(:,1);" + "\n")
-                self.gas_log.write("vEgo = inp_data" + str(self.gas_val) + "(:,2);" + "\n")
-                self.gas_log.write("aEgo = inp_data" + str(self.gas_val) + "(:,3);" + "\n")
+                self.gas_log.write("vEgo = inp_data" + str(self.gas_val) + "(:,2); #[m/s]" + "\n")
+                self.gas_log.write("aEgo = inp_data" + str(self.gas_val) + "(:,3); #[m/s^2]" + "\n")
                 self.gas_log.write("gear = inp_data" + str(self.gas_val) + "(:,4);" + "\n")
                 self.gas_log.write("rpm = inp_data" + str(self.gas_val) + "(:,5);" + "\n")
                 self.gas_log.close()
@@ -197,11 +205,12 @@ class Carlosddd_Acceltest:
 
     def update_brake(self, vEgo, aEgo, clutchPressed, gasPressed):
         if self.brake_test_active and not self.gas_test_active:
-            if clutchPressed and not gasPressed:
+            if not clutchPressed and not gasPressed:
                 apply_brake = self.brake_val
-                # log here
+                # log here (NORMAL testing state)
                 self.brake_log.write(str(self.brake_log_idx)+","+str(vEgo)+","+str(aEgo)+";"+"\n")
             else:
+                # when clutch is pressed -> do not decelerate more than necessary
                 apply_brake = 0
                 self.brake_log.write(str(self.brake_log_idx)+","+str(vEgo)+","+"nan"+";"+"\n")
             if vEgo <= self.target_speed_brake:
@@ -209,8 +218,8 @@ class Carlosddd_Acceltest:
                 apply_brake = 0
                 self.brake_log.write("];" + "\n")
                 self.brake_log.write("idx = inp_data" + str(self.brake_val) + "(:,1);" + "\n")
-                self.brake_log.write("vEgo = inp_data" + str(self.brake_val) + "(:,2);" + "\n")
-                self.brake_log.write("aEgo = inp_data" + str(self.brake_val) + "(:,3);" + "\n")
+                self.brake_log.write("vEgo = inp_data" + str(self.brake_val) + "(:,2); #[m/s]" + "\n")
+                self.brake_log.write("aEgo = inp_data" + str(self.brake_val) + "(:,3); #[m/s^2]" + "\n")
                 self.brake_log.close()
                 self.brake_log_open = False
                 print(">>> carlosddd_acceltest.py: brake test done, log closed()")

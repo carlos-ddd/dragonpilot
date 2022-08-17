@@ -282,8 +282,8 @@ class CarState(CarStateBase):
     self.detected_gear = pt_cp.vl["Getriebe_2"]['Ganganzeige_Kombi___Getriebe_Va']  # for powertrain tap acc_cp
     self.desired_gear = pt_cp.vl["Getriebe_2"]['eingelegte_Fahrstufe']
 
-    #ret.engineRPM = pt_cp.vl["Motor_1"]['Motordrehzahl']
-    ret.engineRPM = 1000 + (self.detected_gear*10) + self.desired_gear  # for debugging only!
+    ret.engineRPM = pt_cp.vl["Motor_1"]['Motordrehzahl']
+    #ret.engineRPM = 1000 + (self.detected_gear*10) + self.desired_gear  # for debugging only!
 
     # Consume blind-spot monitoring info/warning LED states, if available. The
     # info signal (LED on) is enabled whenever a vehicle is detected in the
