@@ -20,20 +20,20 @@ class CarInterface(CarInterfaceBase):
     if CP.networkLocation == NetworkLocation.fwdCamera:
       # DOES NOT APPLY FOR carlos_ddd !
       print(">>> (0) interface.py: networklocation.fwdCamera")
-      self.ext_bus = CANBUS.pt  # CANBUS.pt=can0=at CAN-GW (see values.py)
+      self.ext_bus = CANBUS.pt  # CANBUS.pt=can0=at CAN-GW (see values.py) -> it's only the bus number (int) see values.py that is passed into carcontroller CC.update()
       self.cp_ext = self.cp
 
     else:   # carlos-ddd: that's where we are integrated (J533 CAN gateway)
       print(">>> (0) interface.py: networklocation-ELSE")
       # ext_bus is legacy for the ACC button hacking and is used in carcontrollser CC.update() but currently not used at all (keeping it as legacy)
-      #      ^
+      #      ^      it's only the bus number (int) see values.py that is passed into carcontroller CC.update()
       #      |
       self.ext_bus = CANBUS.cam # CANBUS.cam=can2=isolated (MFK, SWA, Tesla-radar, pedal) (see values.py)
-#      self.cp_ext = self.cp_cam
-#      #      |
-#      #      v
-#      #    cp_ext is the third bus to be parsed in carstate.py CS.update() and a 100% copy of cp_cam at the moment
-      self.cp_ext = self.cp_body # carlos_ddd: powertrain tap
+      self.cp_ext = self.cp_cam
+      #      |
+      #      v
+      #    cp_ext is the third bus to be parsed in carstate.py CS.update() and a 100% copy of cp_cam at the moment
+   #   self.cp_ext = self.cp_body # carlos_ddd: powertrain tap
 
     # the parsers are updated in the update()-function (see below in this file) with the CAN strings
     # and then passed to     CS.update(..., self.cp, self.cp_cam, self.cp_ext, ...)
@@ -291,16 +291,16 @@ class CarInterface(CarInterfaceBase):
     self.cp.update_strings(can_strings)
     self.cp_cam.update_strings(can_strings)
     #print(str(can_strings))
-    if self.cp_body:
-      self.cp_body.update_string(can_strings)
+#    if self.cp_body:
+#      self.cp_body.update_string(can_strings)
 
-    #ret = self.CS.update(self.cp, self.cp_cam, self.cp_ext, self.CP.transmissionType)
-    ret = self.CS.update(self.cp, self.cp_cam, self.cp_body, self.CP.transmissionType)
+    ret = self.CS.update(self.cp, self.cp_cam, self.cp_ext, self.CP.transmissionType)
+#    ret = self.CS.update(self.cp, self.cp_cam, self.cp_body, self.CP.transmissionType)
 
     # dp
     self.dragonconf = dragonconf
     ret.cruiseState.enabled = common_interface_atl(ret, dragonconf.dpAtl)
-    ret.canValid = self.cp.can_valid and self.cp_cam.can_valid and (self.cp_body is None or self.cp_body.can_valid)
+    ret.canValid = self.cp.can_valid and self.cp_cam.can_valid# and (self.cp_body is None or self.cp_body.can_valid)
     ret.steeringRateLimited = self.CC.steer_rate_limited if self.CC is not None else False
 
     # Check for and process state-change events (button press or release) from

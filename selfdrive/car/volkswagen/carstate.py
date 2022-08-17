@@ -35,7 +35,7 @@ class CarState(CarStateBase):
       # CS.get_cam_can_parser() -> self.cp_cam
       self.get_can_parser = self.get_pq_can_parser
       self.get_cam_can_parser = self.get_pq_cam_can_parser
-      self.get_body_can_parser = self.get_pq_body_can_parser
+      #self.get_body_can_parser = self.get_pq_body_can_parser
       # [CS.get_body_can_parser() -> self.cp_body]
       # [CS.get_loopback_can_parser() -> I guess only needed for testing]
       self.update = self.update_pq
@@ -63,7 +63,7 @@ class CarState(CarStateBase):
 
       self.get_can_parser = self.get_mqb_can_parser
       self.get_cam_can_parser = self.get_mqb_cam_can_parser
-      self.get_body_can_parser = self.get_mqb_cam_can_parser
+      #self.get_body_can_parser = self.get_mqb_cam_can_parser
       self.update = self.update_mqb
 
       if CP.transmissionType == TransmissionType.automatic:
@@ -279,8 +279,8 @@ class CarState(CarStateBase):
     # We use the speed preference for OP.
     self.displayMetricUnits = not pt_cp.vl["Einheiten_1"]["MFA_v_Einheit_02"]
 
-    self.detected_gear = acc_cp.vl["Getriebe_2"]['Ganganzeige_Kombi___Getriebe_Va']
-    self.desired_gear = acc_cp.vl["Getriebe_2"]['eingelegte_Fahrstufe']
+    self.detected_gear = pt_cp.vl["Getriebe_2"]['Ganganzeige_Kombi___Getriebe_Va']  # for powertrain tap acc_cp
+    self.desired_gear = pt_cp.vl["Getriebe_2"]['eingelegte_Fahrstufe']
 
     #ret.engineRPM = pt_cp.vl["Motor_1"]['Motordrehzahl']
     ret.engineRPM = 1000 + (self.detected_gear*10) + self.desired_gear  # for debugging only!
@@ -469,6 +469,11 @@ class CarState(CarStateBase):
       signals += [("MO_Kuppl_schalter", "Motor_14"),  # Clutch switch
                   ("BCM1_Rueckfahrlicht_Schalter", "Gateway_72")]  # Reverse light from BCM
       checks.append(("Motor_14", 10))  # From J623 Engine control module
+      
+      signals += [  ("Ganganzeige_Kombi___Getriebe_Va", "Getriebe_2"),    # gear ECU detected
+                    ("eingelegte_Fahrstufe", "Getriebe_2"),    # gear ECU wants (desired gear)
+                ]
+      checks += [("Getriebe_2", 100)]  # From J428 ACC radar control module
 
     if CP.networkLocation == NetworkLocation.fwdCamera:
       # Radars are here on CANBUS.pt
@@ -645,19 +650,19 @@ class CarState(CarStateBase):
     print(">>> carstate.py::pq::checks", checks)
     return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.cam, False)    # -> assign to CANBUS.cam (can2 see values.py)
 
-  @staticmethod
-  def get_pq_body_can_parser(CP):
-    signals = []
-    checks = []
-    if CP.transmissionType == TransmissionType.manual:
-      signals += [  ("Ganganzeige_Kombi___Getriebe_Va", "Getriebe_2"),    # gear ECU detected
-                    ("eingelegte_Fahrstufe", "Getriebe_2"),    # gear ECU wants (desired gear)
-                ]
-      checks += [("Getriebe_2", 10)]  # From J428 ACC radar control module
-    print(">>> (12) carstate.py::get_pq_body_can_parser(): CAN checks and signals (get_pq_body_can_parser()):")
-    print(">>> carstate.py::pq::signals", signals)
-    print(">>> carstate.py::pq::checks", checks)
-    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.br, False)    # -> assign to CANBUS.br (can1 see values.py)
+#  @staticmethod
+#  def get_pq_body_can_parser(CP):
+#    signals = []
+#    checks = []
+#    if CP.transmissionType == TransmissionType.manual:
+#      signals += [  ("Ganganzeige_Kombi___Getriebe_Va", "Getriebe_2"),    # gear ECU detected
+#                    ("eingelegte_Fahrstufe", "Getriebe_2"),    # gear ECU wants (desired gear)
+#                ]
+#      checks += [("Getriebe_2", 10)]  # From J428 ACC radar control module
+#    print(">>> (12) carstate.py::get_pq_body_can_parser(): CAN checks and signals (get_pq_body_can_parser()):")
+#    print(">>> carstate.py::pq::signals", signals)
+#    print(">>> carstate.py::pq::checks", checks)
+#    return CANParser(DBC_FILES.pq46, signals, checks, CANBUS.br, False)    # -> assign to CANBUS.br (can1 see values.py)
 
 class PqExtraSignals:
   # Additional signal and message lists for optional or bus-portable controllers
