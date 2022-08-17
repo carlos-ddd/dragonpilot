@@ -155,7 +155,8 @@ class CarController():
       mobBrakeMax = min(8190, 8190)
       # TODO make sure we use the full 8190 when calculating braking.
       
-      if actuators.accel < 0:   # 0 ... -3.5m/s^2   (braking = neg. acceleration)
+      #if actuators.accel < 0:   # 0 ... -3.5m/s^2   (braking = neg. acceleration)
+      if actuators.accel < self.coastingAccel:
         apply_brake = abs(actuators.accel)
         apply_brake *= mobBrakeScaling
       else:

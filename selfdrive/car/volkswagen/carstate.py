@@ -639,7 +639,7 @@ class CarState(CarStateBase):
                 ]
 
 # wee need a flag like CP.enableBsm (needs to be in car.capnp) for stockHCA present
-#    checks += [("HCA_1", 50),
+#    checks += [("HCA_1", 20),
 #               ("LDW_1", 50),
 #               ]
 
