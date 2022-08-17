@@ -91,19 +91,19 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   unsigned char data_temp[8];
   data_temp[0] = ( data_lo & 0xFF );
   data_temp[1] = ( (data_lo>>8) & 0xFF );
-  data_temp[2] = ( (data_lo>>18) & 0xFF );
+  data_temp[2] = ( (data_lo>>16) & 0xFF );
   data_temp[3] = ( (data_lo>>24) & 0xFF );
-  data_temp[4] = 88; //( data_hi & 0xFF );
-  data_temp[5] = 88; //( (data_hi>>8) & 0xFF );
-  data_temp[6] = 88; //( (data_hi>>18) & 0xFF );
-  data_temp[7] = 88; //( (data_hi>>24) & 0xFF );
+  data_temp[4] = ( data_hi & 0xFF );
+  data_temp[5] = ( (data_hi>>8) & 0xFF );
+  data_temp[6] = ( (data_hi>>16) & 0xFF );
+  data_temp[7] = ( (data_hi>>24) & 0xFF );
   
 
   CANPacket_t to_send;
   to_send.returned = 0U;
   to_send.rejected = 0U;
   to_send.bus = bus_num;
-  to_send.data_len_code = msg_len;
+  to_send.data_len_code = dlc_to_len[msg_len];
   to_send.extended = 0U;
   to_send.addr = msg_addr;
   // data only until designated length
