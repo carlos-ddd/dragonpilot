@@ -290,7 +290,8 @@ class CarInterface(CarInterfaceBase):
     # anyway so we can test connectivity with can_valid
     self.cp.update_strings(can_strings)
     self.cp_cam.update_strings(can_strings)
-    self.cp_body.update_string(can_strings)
+    if self.cp_body:
+      self.cp_body.update_string(can_strings)
 
     #ret = self.CS.update(self.cp, self.cp_cam, self.cp_ext, self.CP.transmissionType)
     ret = self.CS.update(self.cp, self.cp_cam, self.cp_body, self.CP.transmissionType)
@@ -298,7 +299,7 @@ class CarInterface(CarInterfaceBase):
     # dp
     self.dragonconf = dragonconf
     ret.cruiseState.enabled = common_interface_atl(ret, dragonconf.dpAtl)
-    ret.canValid = self.cp.can_valid and self.cp_cam.can_valid and self.cp_body.can_valid
+    ret.canValid = self.cp.can_valid and self.cp_cam.can_valid and (self.cp_body is None or self.cp_body.can_valid)
     ret.steeringRateLimited = self.CC.steer_rate_limited if self.CC is not None else False
 
     # Check for and process state-change events (button press or release) from
