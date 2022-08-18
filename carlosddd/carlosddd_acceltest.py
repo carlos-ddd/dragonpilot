@@ -136,7 +136,7 @@ class Carlosddd_Acceltest:
                         self.gas_log = open(self.logPath+"gasLog_"+str(self.get_ts_now(with_date=True))+"__"+str(int(vEgo))+"_to_"+str(int(self.target_speed_gas))+"__"+str(self.gas_val)+".m", 'a')
                         self.gas_log_open = True
                         self.gas_log_idx = 0
-                        self.gas_log.write("# log of accerleration test to target_speed_gas=" + str(self.target_speed_gas) + "m/s" + "\n")
+                        self.gas_log.write("# log of accerleration test to target_speed_gas=" + str(self.target_speed_gas*3.6) + "km/h" + "\n")
                         self.gas_log.write("apply_gas = " + str(self.gas_val) + "\n")
                         self.gas_log.write("inp_data" + str(self.gas_val) + " = [" + "\n")
             elif ((clutchPressed and self.brake_test_scheduled) or self.brake_test_wait_for_clutch) and not self.gas_test_active and not self.gas_test_wait_for_clutch:
@@ -153,7 +153,7 @@ class Carlosddd_Acceltest:
                         self.brake_log = open(self.logPath+"brakeLog_"+str(self.get_ts_now(with_date=True))+"__"+str(int(vEgo))+"_to_"+str(int(self.target_speed_brake))+"__"+str(self.brake_val)+".m", 'a')
                         self.brake_log_open = True
                         self.brake_log_idx = 0
-                        self.brake_log.write("# log of brake test downto target_speed_brake=" + str(self.target_speed_brake) + "m/s" + "\n")
+                        self.brake_log.write("# log of brake test downto target_speed_brake=" + str(self.target_speed_brake*3.6) + "km/h" + "\n")
                         self.brake_log.write("apply_brake = " + str(self.brake_val) + "\n")
                         self.brake_log.write("inp_data" + str(self.brake_val) + " = [" + "\n")
             active = self.gas_test_active or self.brake_test_active
@@ -178,10 +178,11 @@ class Carlosddd_Acceltest:
     def update_gas(self, vEgo, aEgo, clutchPressed, gear, rpm):
         apply_gas = 0
         if self.gas_test_active and not self.brake_test_active:
+            gear_str = str(int(gear)) if 1<=gear<=6 else "nan"  # NaN for gear also if no valid gear has been detected
             if not clutchPressed:   # allow for shifiting
                 apply_gas = self.gas_val
                 # log here (NORMAL testing state)
-                self.gas_log.write(str(self.gas_log_idx)+","+str(vEgo)+","+str(aEgo)+","+str(int(gear))+","+str(int(rpm))+";"+"\n")
+                self.gas_log.write(str(self.gas_log_idx)+","+str(vEgo)+","+str(aEgo)+","+ gear_str +","+str(int(rpm))+";"+"\n")
             else:
                 # when clutch is pressed, do not apply gas
                 apply_gas = 0
