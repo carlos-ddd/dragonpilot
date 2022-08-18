@@ -86,7 +86,7 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   UNUSED(received);     // legacy from former code
 
   //UNUSED(data_lo);
-  //UNUSED(data_hi);
+  UNUSED(data_hi);
   //
   //unsigned char data_temp[8];
   //data_temp[0] = ( data_lo & 0xFF );
@@ -97,7 +97,7 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   //data_temp[5] = 88; //( (data_hi>>8) & 0xFF );
   //data_temp[6] = 88; //( (data_hi>>16) & 0xFF );
   //data_temp[7] = 88; //( (data_hi>>24) & 0xFF );
-  
+
 
   CANPacket_t to_send;
   to_send.returned = 0U;
@@ -108,7 +108,7 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   to_send.addr = msg_addr;
 
   WORD_TO_BYTE_ARRAY(&to_send.data[0], data_lo);
-  WORD_TO_BYTE_ARRAY(&to_send.data[4], data_hi);
+  //WORD_TO_BYTE_ARRAY(&to_send.data[4], data_hi);
 
 
 
