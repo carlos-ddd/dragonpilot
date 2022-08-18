@@ -29,7 +29,7 @@ class CarInterface(CarInterfaceBase):
       #      ^      it's only the bus number (int) see values.py that is passed into carcontroller CC.update()
       #      |
       self.ext_bus = CANBUS.cam # CANBUS.cam=can2=isolated (MFK, SWA, Tesla-radar, pedal) (see values.py)
-      self.cp_ext = self.cp_cam
+#      self.cp_ext = self.cp_cam
       #      |
       #      v
       #    cp_ext is the third bus to be parsed in carstate.py CS.update() and a 100% copy of cp_cam at the moment
@@ -292,15 +292,15 @@ class CarInterface(CarInterfaceBase):
     self.cp_cam.update_strings(can_strings)
     #print(str(can_strings))
 #    if self.cp_body:
-#      self.cp_body.update_string(can_strings)
+    self.cp_body.update_strings(can_strings)
 
-    ret = self.CS.update(self.cp, self.cp_cam, self.cp_ext, self.CP.transmissionType)
-#    ret = self.CS.update(self.cp, self.cp_cam, self.cp_body, self.CP.transmissionType)
+#    ret = self.CS.update(self.cp, self.cp_cam, self.cp_ext, self.CP.transmissionType)
+    ret = self.CS.update(self.cp, self.cp_cam, self.cp_body, self.CP.transmissionType)
 
     # dp
     self.dragonconf = dragonconf
     ret.cruiseState.enabled = common_interface_atl(ret, dragonconf.dpAtl)
-    ret.canValid = self.cp.can_valid and self.cp_cam.can_valid# and (self.cp_body is None or self.cp_body.can_valid)
+    ret.canValid = self.cp.can_valid and self.cp_cam.can_valid and self.cp_body.can_valid # and (self.cp_body is None or self.cp_body.can_valid)
     ret.steeringRateLimited = self.CC.steer_rate_limited if self.CC is not None else False
 
     # Check for and process state-change events (button press or release) from

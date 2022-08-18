@@ -87,17 +87,17 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
 
   //UNUSED(data_lo);
   UNUSED(data_hi);
-  
-  unsigned char data_temp[8];
-  data_temp[0] = ( data_lo & 0xFF );
-  data_temp[1] = ( (data_lo>>8) & 0xFF );
-  data_temp[2] = ( (data_lo>>16) & 0xFF );
-  data_temp[3] = ( (data_lo>>24) & 0xFF );
-  data_temp[4] = 88; //( data_hi & 0xFF );
-  data_temp[5] = 88; //( (data_hi>>8) & 0xFF );
-  data_temp[6] = 88; //( (data_hi>>16) & 0xFF );
-  data_temp[7] = 88; //( (data_hi>>24) & 0xFF );
-  
+  //
+  //unsigned char data_temp[8];
+  //data_temp[0] = ( data_lo & 0xFF );
+  //data_temp[1] = ( (data_lo>>8) & 0xFF );
+  //data_temp[2] = ( (data_lo>>16) & 0xFF );
+  //data_temp[3] = ( (data_lo>>24) & 0xFF );
+  //data_temp[4] = 88; //( data_hi & 0xFF );
+  //data_temp[5] = 88; //( (data_hi>>8) & 0xFF );
+  //data_temp[6] = 88; //( (data_hi>>16) & 0xFF );
+  //data_temp[7] = 88; //( (data_hi>>24) & 0xFF );
+
 
   CANPacket_t to_send;
   to_send.returned = 0U;
@@ -106,18 +106,16 @@ static void send_fake_message(CANPacket_t *received, int msg_len, int msg_addr, 
   to_send.data_len_code = dlc_to_len[msg_len];
   to_send.extended = 0U;
   to_send.addr = msg_addr;
+
+  WORD_TO_BYTE_ARRAY(&to_send.data[0], data_lo);
+  //WORD_TO_BYTE_ARRAY(&to_send.data[4], data_hi);
+
+
+
   // data only until designated length
-  for( int i=0 ; i<msg_len ; i++){
-      to_send.data[i] = data_temp[i];
-  }
-  //to_send.data[0] = ( data_lo & 0xFF );
-  //to_send.data[1] = ( (data_lo>>8) & 0xFF );
-  //to_send.data[2] = ( (data_lo>>18) & 0xFF );
-  //to_send.data[3] = ( (data_lo>>24) & 0xFF );
-  //to_send.data[4] = 88; //( data_hi & 0xFF );
-  //to_send.data[5] = 88; //( (data_hi>>8) & 0xFF );
-  //to_send.data[6] = 88; //( (data_hi>>18) & 0xFF );
-  //to_send.data[7] = 88; //( (data_hi>>24) & 0xFF );
+//  for( int i=0 ; i<msg_len ; i++){
+//      to_send.data[i] = data_temp[i];
+//  }
 
 /*
   CAN_FIFOMailBox_TypeDef to_send;
@@ -307,7 +305,7 @@ static void teslaradar_rx_hook(CANPacket_t *to_push)
   //looking for radar messages;
   if ((addr == 0x300) && (bus_number == tesla_radar_can))
   {
-    uint32_t ts = TIM2->CNT;
+    uint32_t ts = microsecond_timer_get();
     uint32_t ts_elapsed = get_ts_elapsed(ts, tesla_last_radar_signal);
     if (tesla_radar_status == 1) {
       tesla_radar_status = 2;
@@ -327,7 +325,7 @@ static void teslaradar_rx_hook(CANPacket_t *to_push)
   //0x631 is sent by radar to initiate the sync
   if ((addr == 0x631) && (bus_number == tesla_radar_can))
   {
-    uint32_t ts = TIM2->CNT;
+    uint32_t ts = microsecond_timer_get();
     uint32_t ts_elapsed = get_ts_elapsed(ts, tesla_last_radar_signal);
     if (tesla_radar_status == 0) {
       tesla_radar_status = 1;
