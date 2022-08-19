@@ -6,12 +6,26 @@ from opendbc.can.parser import CANParser
 from opendbc.can.can_define import CANDefine
 from selfdrive.car.volkswagen.values import DBC_FILES, CANBUS, NetworkLocation, TransmissionType, GearShifter, BUTTON_STATES, CarControllerParams
 from selfdrive.car.volkswagen.PQacc_module import PQacc
+#from selfdrive.car.volkswagen.PQtrafficsign_module import PQtsr
+
+_TRAFFIC_SINGAL_MAP = {
+  1: "kph",
+  36: "mph",
+  65: "No overtake",
+  66: "No overtake"
+}
+
+# dp
+DP_ACCEL_ECO = 0
+DP_ACCEL_NORMAL = 1
+DP_ACCEL_SPORT = 2
 
 class CarState(CarStateBase):
   def __init__(self, CP):
     super().__init__(CP)
 
     self.ACC = PQacc()
+    #self.TSR = PQtsr()
 
     ### START OF MAIN CONFIG OPTIONS ###
     ### Do NOT modify here, modify in /data/bb_openpilot.cfg and reboot
@@ -52,6 +66,8 @@ class CarState(CarStateBase):
         self.openpilot_enabled = False
       else:
         print(">>> (3) carstate.py: enableGasInterceptor is false!")
+
+      #self._init_traffic_signals()
 
 
     ## === ##
@@ -391,7 +407,118 @@ class CarState(CarStateBase):
       self.ABSWorking = pt_cp.vl["Bremse_8"]["BR8_Sta_ADR_BR"]
       self.currentSpeed = ret.vEgo
 
+    # copied from toyota carstate.py
+    # traffic sign recognition
+    #self._update_traffic_signals(cp_cam)
+    #ret.cruiseState.speedLimit = self._calculate_speed_limit()
+
+    # ret.cruiseState.speedLimit = self.TSR.update(cam_cp)
+
+    # copied from toyota carstate.py
+    # follow distance
+    #ret.distanceLines = cp.vl["PCM_CRUISE_SM"]["DISTANCE_LINES"] # this is used by selfdrive\controls\lib\longitudinal_mpc_lib\long_mpc.py
+                                                                  # 1=Traffic, 2=Relaxed, else=?normal?
+
+    # copied from toyota carstate.py
+    # used in selfdrive\controls\lib\longitudinal_planner.py but it's not clear if this is just an overwrite of the DP-GUI toggles/settings
+    #   see common\dp_conf.py
+    #if sport_on == 0 and econ_on == 0:
+    #  self.dp_accel_profile = DP_ACCEL_NORMAL
+    #elif sport_on == 1:
+    #  self.dp_accel_profile = DP_ACCEL_SPORT
+    #elif econ_on == 1:
+    #  self.dp_accel_profile = DP_ACCEL_ECO
+
     return ret
+
+#####################
+### TRAFFIC SIGNS ###
+#####################
+# copied from toyota carstate.py
+
+  def _init_traffic_signals(self):
+    self._tsgn1 = None
+    self._spdval1 = None
+    self._splsgn1 = None
+    self._tsgn2 = None
+    self._splsgn2 = None
+    self._tsgn3 = None
+    self._splsgn3 = None
+    self._tsgn4 = None
+    self._splsgn4 = None
+
+  def _update_traffic_signals(self, cp_cam):
+    # Print out car signals for traffic signal detection
+    tsgn1 = cp_cam.vl["RSA1"]['TSGN1']
+    spdval1 = cp_cam.vl["RSA1"]['SPDVAL1']
+    splsgn1 = cp_cam.vl["RSA1"]['SPLSGN1']
+    tsgnhlt1 = cp_cam.vl["RSA1"]['TSGNHLT1']
+    tsgn2 = cp_cam.vl["RSA1"]['TSGN2']
+    splsgn2 = cp_cam.vl["RSA1"]['SPLSGN2']
+    tsgn3 = cp_cam.vl["RSA2"]['TSGN3']
+    splsgn3 = cp_cam.vl["RSA2"]['SPLSGN3']
+    tsgn4 = cp_cam.vl["RSA2"]['TSGN4']
+    splsgn4 = cp_cam.vl["RSA2"]['SPLSGN4']
+
+    has_changed = tsgn1 != self._tsgn1 \
+      or spdval1 != self._spdval1 \
+      or splsgn1 != self._splsgn1 \
+      or tsgnhlt1 != self.tsgnhlt1 \
+      or tsgn2 != self._tsgn2 \
+      or splsgn2 != self._splsgn2 \
+      or tsgn3 != self._tsgn3 \
+      or splsgn3 != self._splsgn3 \
+      or tsgn4 != self._tsgn4 \
+      or splsgn4 != self._splsgn4
+
+    self._tsgn1 = tsgn1
+    self._spdval1 = spdval1
+    self._splsgn1 = splsgn1
+    self.tsgnhlt1 = tsgnhlt1
+    self._tsgn2 = tsgn2
+    self._splsgn2 = splsgn2
+    self._tsgn3 = tsgn3
+    self._splsgn3 = splsgn3
+    self._tsgn4 = tsgn4
+    self._splsgn4 = splsgn4
+
+    if not has_changed:
+      return
+
+    print('---- TRAFFIC SIGNAL UPDATE -----')
+    if tsgn1 is not None and tsgn1 != 0:
+      print(f'TSGN1: {self._traffic_signal_description(tsgn1)}')
+    if spdval1 is not None and spdval1 != 0:
+      print(f'SPDVAL1: {spdval1}')
+    if splsgn1 is not None and splsgn1 != 0:
+      print(f'SPLSGN1: {splsgn1}')
+    if tsgnhlt1 is not None and tsgnhlt1 != 0:
+      print(f'TSGNHLT1: {tsgnhlt1}')
+    if tsgn2 is not None and tsgn2 != 0:
+      print(f'TSGN2: {self._traffic_signal_description(tsgn2)}')
+    if splsgn2 is not None and splsgn2 != 0:
+      print(f'SPLSGN2: {splsgn2}')
+    if tsgn3 is not None and tsgn3 != 0:
+      print(f'TSGN3: {self._traffic_signal_description(tsgn3)}')
+    if splsgn3 is not None and splsgn3 != 0:
+      print(f'SPLSGN3: {splsgn3}')
+    if tsgn4 is not None and tsgn4 != 0:
+      print(f'TSGN4: {self._traffic_signal_description(tsgn4)}')
+    if splsgn4 is not None and splsgn4 != 0:
+      print(f'SPLSGN4: {splsgn4}')
+    print('------------------------')
+
+  def _traffic_signal_description(self, tsgn):
+    desc = _TRAFFIC_SINGAL_MAP.get(int(tsgn))
+    return f'{tsgn}: {desc}' if desc is not None else f'{tsgn}'
+
+  def _calculate_speed_limit(self):
+    if self._tsgn1 == 1:
+      return self._spdval1 * CV.KPH_TO_MS
+    if self._tsgn1 == 36:
+      return self._spdval1 * CV.MPH_TO_MS
+    return 0
+
 
   @staticmethod
   def get_mqb_can_parser(CP):

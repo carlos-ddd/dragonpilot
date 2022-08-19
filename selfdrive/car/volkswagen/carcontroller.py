@@ -7,8 +7,10 @@ from opendbc.can.packer import CANPacker
 from common.dp_common import common_controller_ctrl
 from carlosddd.carlosddd_logmodule import Carlosddd_Logmodule
 from carlosddd.carlosddd_acceltest import Carlosddd_Acceltest
+#from selfdrive.controls.lib.pid import PIController
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
+#AudibleAlert = car.CarControl.HUDControl.AudibleAlert
 
 class CarController():
   def __init__(self, dbc_name, CP, VM):

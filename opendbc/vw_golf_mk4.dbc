@@ -1535,6 +1535,16 @@ BO_ 1040 mOP_Status1: 8 OP
  SG_ OPS1_set_speed : 24|8@1+ (1,0) [0|255] "kmh" XXX
  SG_ OPS1_void : 32|32@1+ (1,0) [0|1] "" XXX
 
+BO_ 1691 BAP_VZA: 8 MFK
+ SG_ BAP_VZA_data0 : 0|8@1+ (1,0) [0|255] "" XXX
+ SG_ BAP_VZA_data1 : 8|8@1+ (1,0) [0|255] "" XXX
+ SG_ BAP_VZA_data2 : 16|8@1+ (1,0) [0|255] "" XXX
+ SG_ BAP_VZA_data3 : 24|8@1+ (1,0) [0|255] "" XXX
+ SG_ BAP_VZA_data4 : 32|8@1+ (1,0) [0|255] "" XXX
+ SG_ BAP_VZA_data5 : 40|8@1+ (1,0) [0|255] "" XXX
+ SG_ BAP_VZA_data6 : 48|8@1+ (1,0) [0|255] "" XXX
+ SG_ BAP_VZA_data7 : 56|8@1+ (1,0) [0|255] "" XXX
+
 
 CM_ SG_ 210 LM_Offset "centiNewton-meters for ease of calculation without FP math in Panda";
 CM_ SG_ 210 Vib_Amp "Steering wheel haptic, amplitude";

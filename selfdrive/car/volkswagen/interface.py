@@ -348,5 +348,13 @@ class CarInterface(CarInterfaceBase):
                          hud_control.leftLaneDepart,
                          hud_control.rightLaneDepart,
                          self.dragonconf)
+                            # hud_control.leadVisible
+                            # hudControl.setSpeed
+                            # hudControl.speedVisible
+                            # hudControl.lanesVisible
+
+
+
+
     self.frame += 1
     return ret
