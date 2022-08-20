@@ -6,7 +6,7 @@ from opendbc.can.parser import CANParser
 from opendbc.can.can_define import CANDefine
 from selfdrive.car.volkswagen.values import DBC_FILES, CANBUS, NetworkLocation, TransmissionType, GearShifter, BUTTON_STATES, CarControllerParams
 from selfdrive.car.volkswagen.PQacc_module import PQacc
-#from selfdrive.car.volkswagen.PQtrafficsign_module import PQtsr
+from selfdrive.car.volkswagen.PQtrafficsign_module import PQtsr
 
 _TRAFFIC_SINGAL_MAP = {
   1: "kph",
@@ -25,7 +25,7 @@ class CarState(CarStateBase):
     super().__init__(CP)
 
     self.ACC = PQacc()
-    #self.TSR = PQtsr()
+    self.TSR = PQtsr()
 
     ### START OF MAIN CONFIG OPTIONS ###
     ### Do NOT modify here, modify in /data/bb_openpilot.cfg and reboot
@@ -412,7 +412,7 @@ class CarState(CarStateBase):
     #self._update_traffic_signals(cp_cam)
     #ret.cruiseState.speedLimit = self._calculate_speed_limit()
 
-    # ret.cruiseState.speedLimit = self.TSR.update(cam_cp)
+    ret.cruiseState.speedLimit = self.TSR.update(cam_cp)
 
     # copied from toyota carstate.py
     # follow distance
