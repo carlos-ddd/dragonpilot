@@ -10,13 +10,12 @@ class PQtsr():
     def __init__(self):
         self.bap = PQbap()
         self.BAP_VZA_CAN_ID = 1691  # dlc=8, 0x69B; Edgy-info: 0x69B FSG camera to cluster; Datasource: PQ-Systembeschreibung on CANs:Extended,Infotainment,Kombi
-        
+
         self.startup_ts = self.get_ts_now(with_date=True)
         self.abs_path = "/data/openpilot/carlosddd/"
         self.log_path = self.abs_path + "logs/"
         self.filename = "tsrLog" + "_" + self.startup_ts
         self.log_filename_csv = self.log_path + "tsr/" + self.filename + ".csv"
-        self.log_file = open(self.log_filename_csv, 'a')
         self.cnt = 0
 
     def update(self, can_parser):
@@ -46,18 +45,23 @@ class PQtsr():
         self.update_log_raw( can_parser.vl["BAP_VZA"] )
 
         return detected_signs_lst
-        
+
     def get_ts_now(self, with_date=False):
         if with_date:
             return datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
         else:
             return datetime.datetime.now().strftime("%H:%M:%S.%f")
-            
+
     def update_log(self, bap_pkg):
-        self.log_file.write( str(bap_pkg) + "\n" )
+        log_file = open(self.log_filename_csv, 'a')
+        log_file.write( str(bap_pkg) + "\n" )
+        log_file.close()
 
     def update_log_raw(self, can_parser_raw):
-        self.log_file.write( str(can_parser_raw) + "\n" )
+        if bool(can_parser_raw):  # check if dict is empty
+            log_file = open(self.log_filename_csv, 'a')
+            log_file.write( str(can_parser_raw) + "\n" )
+            log_file.close()
 
 
     def parse_bap_vza(self, bap_pkg):

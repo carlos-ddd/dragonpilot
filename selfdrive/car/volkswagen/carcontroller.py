@@ -19,11 +19,11 @@ class CarController():
     self.blinker_end_frame = 0.
 
     self.apply_steer_last = 0
-    
+
     self.mobPreEnable = False
     self.mobEnabled = False
     self.mobBrakingProhibited = True
-    
+
     self.radarVin_idx = 0
 
     self.coastingAccel = -0.42735
@@ -92,11 +92,9 @@ class CarController():
       # One frame of HCA disabled is enough to reset the timer, without zeroing the
       # torque value. Do that anytime we happen to have 0 torque, or failing that,
       # when exceeding ~1/3 the 360 second timer.
-      
-      hca_status_value = 3 # HCA3 = neutral, not steering
+
 
       if c.active and CS.out.vEgo > CS.CP.minSteerSpeed and not (CS.out.standstill or CS.out.steerError or CS.out.steerWarning):
-        hca_status_value = 7 # HCA7 powerful OP steering
         new_steer = int(round(actuators.steer * P.STEER_MAX))
         apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, P)
         self.steer_rate_limited = new_steer != apply_steer
@@ -120,11 +118,10 @@ class CarController():
       else:
         hcaEnabled = False
         apply_steer = 0
-        
-        # when OP is not active, but stock wants to steer -- we let it steer!
-        if CS.stock_HCA_Status == 5:    # wants to steer (7 never observed from MFK, 3=not steering)
-            hca_status_value = 5    # stock camera steers with HCA5
-            apply_steer = CS.stock_HCA_SteeringVal
+
+      # when OP is not active, but stock wants to steer -- we let it steer!
+      stock_hca_status =  CS.stock_HCA_Status
+      stock_apply_steer = CS.stock_HCA_SteeringVal
 
       # dp
       blinker_on = CS.out.leftBlinker or CS.out.rightBlinker
@@ -141,7 +138,7 @@ class CarController():
       self.apply_steer_last = apply_steer
       idx = (frame / P.HCA_STEP) % 16
       can_sends.append(self.create_steering_control(self.packer_pt, CANBUS.pt, apply_steer,
-                                                                 idx, hcaEnabled, hca_status_value))
+                                                                 idx, hcaEnabled, stock_hca_status, stock_apply_steer))
 
 
     # --------------------------------------------------------------------------

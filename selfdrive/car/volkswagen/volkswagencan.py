@@ -58,20 +58,28 @@ def create_mqb_acc_buttons_control(packer, bus, buttonStatesToSend, CS, idx):
 #                                                                         #
 # ----------------------------------------------------------------------- #
 
-def create_pq_steering_control(packer, bus, apply_steer, idx, lkas_enabled, hca_status_value):
-  values = {
-    "HCA_Zaehler": idx,
-    "LM_Offset": abs(apply_steer),
-    "LM_OffSign": 1 if apply_steer < 0 else 0,
-    "HCA_Status": hca_status_value if (lkas_enabled and apply_steer != 0) else 3,   # HCA7=powerful, HCA5=not so powerful (used by stock camera), HCA3=not steering
-    "Vib_Freq": 16,
-  }
-
+def create_pq_steering_control(packer, bus, apply_steer, idx, lkas_enabled, stock_hca_status, stock_apply_steer):
+  if lkas_enabled:
+    values = {
+      "HCA_Zaehler": idx,
+      "LM_Offset": abs(apply_steer),
+      "LM_OffSign": 1 if apply_steer < 0 else 0,
+      "HCA_Status": 7 if (lkas_enabled and apply_steer != 0) else 3,   # HCA7=powerful, HCA5=not so powerful (used by stock camera), HCA3=not steering
+      "Vib_Freq": 16,
+    }
+  else:
+    values = {
+      "HCA_Zaehler": idx,
+      "LM_Offset": abs(stock_apply_steer),
+      "LM_OffSign": 1 if stock_apply_steer < 0 else 0,
+      "HCA_Status": stock_hca_status,
+      "Vib_Freq": 16,
+      }
   dat = packer.make_can_msg("HCA_1", bus, values)[2]
   values["HCA_Checksumme"] = dat[1] ^ dat[2] ^ dat[3] ^ dat[4]
   return packer.make_can_msg("HCA_1", bus, values)
-  
-  
+
+
 def create_pq_braking_control(packer, bus, apply_brake, idx, brake_enabled, brake_pre_enable, stopping_wish):
   values = {
     "PQ_MOB_COUNTER": idx,
@@ -85,8 +93,8 @@ def create_pq_braking_control(packer, bus, apply_brake, idx, brake_enabled, brak
   dat = packer.make_can_msg("MOB_1", bus, values)[2]
   values["PQ_MOB_CHECKSUM"] = dat[1] ^ dat[2] ^ dat[3] ^ dat[4] ^ dat[5]
   return packer.make_can_msg("MOB_1", bus, values)
-  
-  
+
+
 def create_pq_awv_control(packer, bus, idx, led_orange, led_green, abs_working, brake_symbol, warn_sound, brakejolt_type, brake_jolt):
   values = {
     "AWV_2_Fehler" : 1 if led_orange else 0,
@@ -155,7 +163,7 @@ def create_pq_pedal_control(packer, bus, apply_gas, idx):
     "ENABLE": enable,
     "COUNTER_PEDAL": idx & 0xF,
   }
-  
+
 # Karls Golf6 OAT=30degC, battery old but OK,
 # connected to small charger, engine off,
 # recordings from comma pedal values (carstate.py)
@@ -195,18 +203,18 @@ def create_pq_hud_control(packer, bus, hca_enabled, steering_pressed, hud_alert,
   if hca_enabled:
     left_lane_hud = 3 if left_lane_visible else 1
     right_lane_hud = 3 if right_lane_visible else 1
-    values = {
-        "Right_Lane_Status": right_lane_hud,
-        "Left_Lane_Status": left_lane_hud,
-        "SET_ME_X1": 1,
-        "Kombi_Lamp_Orange": 1 if hca_enabled and steering_pressed else 0,
-        "Kombi_Lamp_Green": 1 if hca_enabled and not steering_pressed else 0,
-        "LDW_Textbits": hud_alert,
-    }
   else:
     left_lane_hud = 2 if left_lane_visible else 1
     right_lane_hud = 2 if right_lane_visible else 1
-    values = ldw_stock_values.copy()
+#    values = ldw_stock_values.copy()
+  values = {
+      "Right_Lane_Status": right_lane_hud,
+      "Left_Lane_Status": left_lane_hud,
+      "SET_ME_X1": 1,
+      "Kombi_Lamp_Orange": 1 if hca_enabled and steering_pressed else 0,
+      "Kombi_Lamp_Green": 1 if hca_enabled and not steering_pressed else 0,
+      "LDW_Textbits": hud_alert,
+  }
   return packer.make_can_msg("LDW_1", bus, values)
 
 

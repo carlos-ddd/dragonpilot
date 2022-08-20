@@ -326,7 +326,7 @@ class CarState(CarStateBase):
     # carlos-ddd: might be same-ish on PQ!
     #ret.stockFcw = bool(ext_cp.vl["ACC_10"]["AWV2_Freigabe"])
     #ret.stockAeb = bool(ext_cp.vl["ACC_10"]["ANB_Teilbremsung_Freigabe"]) or bool(ext_cp.vl["ACC_10"]["ANB_Zielbremsung_Freigabe"])
-    
+
     # collect HCA_1 steering-data from stock HCA camera (MFK)
     self.stock_HCA_Status = int(cam_cp.vl["HCA_1"]['HCA_Status'])
     stock_HCA_LM_Offset = int(cam_cp.vl["HCA_1"]['LM_Offset'])
@@ -376,10 +376,10 @@ class CarState(CarStateBase):
     ret.cruiseState.speed = self.v_ACC * CV.KPH_TO_MS
     if ret.clutchPressed:                                           # during clutch open do not try to accelerate
       ret.cruiseState.speed = min(ret.vEgo, ret.cruiseState.speed)  # -> neutral speed setpoint but do not increase
-                                                                    #    (to not prevent braking with clutch open)      
+                                                                    #    (to not prevent braking with clutch open)
     if ret.cruiseState.speed > 70:  # 255 kph in m/s == no current setpoint
       ret.cruiseState.speed = 0
-    
+
     # blinke / turn indicator
     ret.leftBlinker = bool(pt_cp.vl["Gate_Komf_1"]['GK1_Blinker_li'])
     ret.rightBlinker = bool(pt_cp.vl["Gate_Komf_1"]['GK1_Blinker_re'])
@@ -413,6 +413,7 @@ class CarState(CarStateBase):
     #ret.cruiseState.speedLimit = self._calculate_speed_limit()
 
     ret.cruiseState.speedLimit = self.TSR.update(cam_cp)
+    print( ">>>", str(cam_cp.vl["BAP_VZA"]) )
 
     # copied from toyota carstate.py
     # follow distance
