@@ -413,7 +413,9 @@ class CarState(CarStateBase):
     #ret.cruiseState.speedLimit = self._calculate_speed_limit()
 
     ret.cruiseState.speedLimit = self.TSR.update(cam_cp)
-    print( ">>>", str(cam_cp.vl["BAP_VZA"]) )
+    
+    temp_sig = "BAP_VZA"
+    print( ">>>", str(cam_cp.vl[temp_sig]), str(cam_cp.vl[temp_sig]), str(cam_cp.vl_all[temp_sig]), str(cam_cp.can_valid[temp_sig]), str(cam_cp.can_invalid_cnt[temp_sig]), str(cam_cp.address_to_msg_name[temp_sig]), str(cam_cp.msg_name_to_address[temp_sig]) )
 
     # copied from toyota carstate.py
     # follow distance
