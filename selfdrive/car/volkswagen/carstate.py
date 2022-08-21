@@ -414,7 +414,7 @@ class CarState(CarStateBase):
 
     ret.cruiseState.speedLimit = self.TSR.update(cam_cp)
     
-    temp_sig = "SWA_1" # BAP_VZA
+    temp_sig = "HCA_1" # BAP_VZA
     print( ">>>", str(cam_cp.vl[temp_sig]), str(cam_cp.vl[temp_sig]), str(cam_cp.vl_all[temp_sig]) )
 
     # copied from toyota carstate.py
