@@ -414,8 +414,8 @@ class CarState(CarStateBase):
 
     ret.cruiseState.speedLimit = self.TSR.update(cam_cp)
     
-    temp_sig = "BAP_VZA" # BAP_VZA HCA_1
-    print( ">>>", str(cam_cp.vl[temp_sig]), str(dict(cam_cp.vl_all[temp_sig])) )
+    #temp_sig = "BAP_VZA" # BAP_VZA HCA_1
+    #print( ">>>", str(cam_cp.vl[temp_sig]), str(dict(cam_cp.vl_all[temp_sig])) )
 
     # copied from toyota carstate.py
     # follow distance
@@ -762,14 +762,14 @@ class CarState(CarStateBase):
     signals += [("HCA_Status", "HCA_1"), 
                 ("LM_Offset", "HCA_1"),
                 ("LM_OffSign", "HCA_1"),
-                ("BAP_VZA_data0", "BAP_VZA", 777),
-                ("BAP_VZA_data1", "BAP_VZA", 777),
-                ("BAP_VZA_data2", "BAP_VZA", 777),
-                ("BAP_VZA_data3", "BAP_VZA", 777),
-                ("BAP_VZA_data4", "BAP_VZA", 777),
-                ("BAP_VZA_data5", "BAP_VZA", 777),
-                ("BAP_VZA_data6", "BAP_VZA", 777),
-                ("BAP_VZA_data7", "BAP_VZA", 777),
+                ("BAP_VZA_data0", "BAP_VZA"),
+                ("BAP_VZA_data1", "BAP_VZA"),
+                ("BAP_VZA_data2", "BAP_VZA"),
+                ("BAP_VZA_data3", "BAP_VZA"),
+                ("BAP_VZA_data4", "BAP_VZA"),
+                ("BAP_VZA_data5", "BAP_VZA"),
+                ("BAP_VZA_data6", "BAP_VZA"),
+                ("BAP_VZA_data7", "BAP_VZA"),
                 ]
 
 # wee need a flag like CP.enableBsm (needs to be in car.capnp) for stockHCA present
