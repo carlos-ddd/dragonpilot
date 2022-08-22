@@ -7,7 +7,8 @@ from opendbc.can.packer import CANPacker
 from common.dp_common import common_controller_ctrl
 from carlosddd.carlosddd_logmodule import Carlosddd_Logmodule
 from carlosddd.carlosddd_acceltest import Carlosddd_Acceltest
-#from selfdrive.controls.lib.pid import PIController
+from selfdrive.controls.lib.pid import PIController
+from common.realtime import DT_CTRL
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 #AudibleAlert = car.CarControl.HUDControl.AudibleAlert
@@ -59,6 +60,14 @@ class CarController():
 
     self.CdddL = Carlosddd_Logmodule("LoC")
     self.CdddA = Carlosddd_Acceltest()
+    
+    self.pid = PIController((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
+                            (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
+                            rate=1 / DT_CTRL)
+                            #self.pid.reset()
+                            #self.pid.neg_limit = accel_limits[0]
+                            #self.pid.pos_limit = accel_limits[1]
+                            #output_accel = self.pid.update(self.v_pid, CS.vEgo, speed=CS.vEgo, deadzone=deadzone, feedforward=a_target, freeze_integrator=freeze_integrator)
 
 
   def update(self, c, enabled, CS, frame, ext_bus, actuators, visual_alert, audible_alert, left_lane_visible, right_lane_visible, left_lane_depart, right_lane_depart, dragonconf):
