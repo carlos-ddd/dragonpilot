@@ -5,11 +5,15 @@ import json
 
 
 from selfdrive.car.volkswagen.PQbap_module import PQbap
+from selfdrive.car.volkswagen.raw_can_receiver import Raw_CAN_Receiver
 
 class PQtsr():
     def __init__(self):
         self.bap = PQbap()
         self.BAP_VZA_CAN_ID = 1691  # dlc=8, 0x69B; Edgy-info: 0x69B FSG camera to cluster; Datasource: PQ-Systembeschreibung on CANs:Extended,Infotainment,Kombi
+        self.BAP_VZA_CAN_BUS = 2
+        self.BAP_VZA_LSG_ID = 33
+        self.raw_can_receiver = Raw_CAN_Receiver(self.BAP_VZA_CAN_BUS, self.BAP_VZA_CAN_ID)
 
         self.startup_ts = self.get_ts_now(with_date=True)
         self.abs_path = "/data/openpilot/carlosddd/"
@@ -26,23 +30,17 @@ class PQtsr():
         return speed_ms
 
     def update_bap(self, can_parser, log=False):
+
         detected_signs_lst = []
 
-#        bap_data_raw = []
-#        bap_data_raw.append(can_parser.vl["BAP_VZA"]['BAP_VZA_data0'])
-#        bap_data_raw.append(can_parser.vl["BAP_VZA"]['BAP_VZA_data1'])
-#        bap_data_raw.append(can_parser.vl["BAP_VZA"]['BAP_VZA_data2'])
-#        bap_data_raw.append(can_parser.vl["BAP_VZA"]['BAP_VZA_data3'])
-#        bap_data_raw.append(can_parser.vl["BAP_VZA"]['BAP_VZA_data4'])
-#        bap_data_raw.append(can_parser.vl["BAP_VZA"]['BAP_VZA_data5'])
-#        bap_data_raw.append(can_parser.vl["BAP_VZA"]['BAP_VZA_data6'])
-#        bap_data_raw.append(can_parser.vl["BAP_VZA"]['BAP_VZA_data7'])
-#
-#        bap_pkg = self.bap.receive_can(message.arbitration_id, bap_data_raw[:true_dlc])
+        raw_can_data = self.raw_can_receiver.update()
+
+#        bap_pkg = self.bap.receive_can(self.BAP_VZA_CAN_ID, raw_can_data)
+
 #        if bap_pkg != None:
 #            self.update_log(bap_pkg)
 #            self.parse_bap_vza(bap_pkg)
-        self.update_log_raw( can_parser.vl["BAP_VZA"] )
+        self.update_log_raw( raw_can_data )
 
         return detected_signs_lst
 
@@ -58,15 +56,17 @@ class PQtsr():
         log_file.close()
 
     def update_log_raw(self, can_parser_raw):
-        if bool(can_parser_raw):  # check if dict is empty
-            log_file = open(self.log_filename_csv, 'a')
-            log_file.write( str(can_parser_raw) + "\n" )
-            log_file.close()
+        #if bool(can_parser_raw):  # check if dict can_parser_raw is empty
+        log_file = open(self.log_filename_csv, 'a')
+        log_file.write( str(can_parser_raw) + "\n" )
+        log_file.close()
 
 
     def parse_bap_vza(self, bap_pkg):
         can_id, op_code, lsg_id, fct_id, bap_data = bap_pkg
-        pass
+        if can_id == self.BAP_VZA_CAN_ID:
+            if lsg_id == self.BAP_VZA_LSG_ID:
+                pass
 
 
 
