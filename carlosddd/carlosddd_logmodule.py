@@ -99,6 +99,7 @@ class Carlosddd_Logmodule:
                     out_str += 'nan'
                 out_str += ","
             out_str += ";"
+        out_str += ":::"
         print(out_str)
 
     def log_output_octave(self):
