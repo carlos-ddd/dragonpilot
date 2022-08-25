@@ -42,6 +42,7 @@ class PQtsr():
             if bap_pkg != None:
                 self.update_log(bap_pkg)
                 self.parse_bap_vza(bap_pkg)
+                print(">>>", bap_pkg)
 
         return detected_signs_lst
 
