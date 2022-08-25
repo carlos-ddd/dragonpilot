@@ -20,6 +20,7 @@ class PQtsr():
         self.log_path = self.abs_path + "logs/"
         self.filename = "tsrLog" + "_" + self.startup_ts
         self.log_filename_csv = self.log_path + "tsr/" + self.filename + ".csv"
+        self.log_filename_csv_raw = self.log_path + "tsr/" + self.filename + "_raw" + ".csv"
         self.cnt = 0
 
     def update(self):
@@ -65,7 +66,7 @@ class PQtsr():
 
     def update_log_raw(self, to_log):
         #if bool(to_log):  # check if dict to_log is empty
-        log_file = open(self.log_filename_csv, 'a')
+        log_file = open(self.log_filename_csv_raw, 'a')
         log_file.write( str(to_log) + "\n" )
         log_file.close()
 
