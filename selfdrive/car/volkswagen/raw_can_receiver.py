@@ -21,7 +21,7 @@ class Raw_CAN_Receiver():
         for msg in messaging.drain_sock(self.can, wait_for_one=True):
             for m in msg.can:
                 if m.address == self.addr and m.src == self.bus:
-                    out_data.append(m.dat)
+                    out_data.append(ord(m.dat))
         if len(out_data) > 0:
-            print(">>>raw_can_receiver.py::update() out_data", out_data)
+            print(">>>raw_can_receiver.py::update() out_data", out_data, "len", len(out_data))
         return out_data
