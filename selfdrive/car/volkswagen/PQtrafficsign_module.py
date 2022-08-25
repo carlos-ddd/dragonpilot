@@ -40,7 +40,7 @@ class PQtsr():
             print(">>>", raw_can_data)
             bap_pkg = self.bap.receive_can(self.BAP_VZA_CAN_ID, raw_can_data)
             if bap_pkg != None:
-                self.update_log(bap_pkg)
+                self.update_log(bap_pkg, decoded=True)
                 self.parse_bap_vza(bap_pkg)
                 print(">>>", bap_pkg)
 
@@ -52,8 +52,14 @@ class PQtsr():
         else:
             return datetime.datetime.now().strftime("%H:%M:%S.%f")
 
-    def update_log(self, bap_pkg):
+    def update_log(self, bap_pkg, decoded=True):
         log_file = open(self.log_filename_csv, 'a')
+        can_id, op_code, lsg_id, fct_id, bap_data = bap_pkg
+        log_file.write( str(can_id) + ";" )
+        log_file.write( str(lsg_id) + ";" )
+        log_file.write( str(fct_id) + ";" )
+        log_file.write( str(op_code) + ";" )
+        log_file.write( str(bap_data) + ";" )
         log_file.write( str(bap_pkg) + "\n" )
         log_file.close()
 
