@@ -523,7 +523,7 @@ class CarController():
         self.CdddL.update('apply_brake', apply_brake)
         self.CdddL.update('apply_gas', apply_gas)
         self.CdddL.update('detected_gear', CS.detected_gear)
-        self.CdddL.update('engineRPM', CS.engineRPM)
+        self.CdddL.update('engineRPM', CS.out.engineRPM)
         self.CdddL.slice_done()
 
     return new_actuators, can_sends
