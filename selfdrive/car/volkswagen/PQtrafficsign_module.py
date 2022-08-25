@@ -2,6 +2,7 @@ import numpy
 import math
 import datetime
 import json
+import os.path
 
 
 from selfdrive.car.volkswagen.PQbap_module import PQbap
@@ -19,9 +20,26 @@ class PQtsr():
         self.abs_path = "/data/openpilot/carlosddd/"
         self.log_path = self.abs_path + "logs/"
         self.filename = "tsrLog" + "_" + self.startup_ts
-        self.log_filename_csv = self.log_path + "tsr/" + self.filename + ".csv"
-        self.log_filename_csv_raw = self.log_path + "tsr/" + self.filename + "_raw" + ".csv"
+
+        log_filename_csv = self.log_path + "tsr/" + self.filename
+        self.log_filename_csv = self.unique_filename(log_filename_csv) + ".csv"
+
+        log_filename_csv_raw = self.log_path + "tsr/" + self.filename + "_raw"
+        self.log_filename_csv_raw = self.unique_filename(log_filename_csv_raw) + ".csv"
+
         self.cnt = 0
+
+    def unique_filename(self, org_path):
+        addon = 0
+        ret = org_path
+        while True:
+            if os.path.exists(org_path):
+                ret = org_path + "_" +str(addon)
+            else:
+                break
+            addon += 1
+        print(">>> PQtrafficsign_module.py::unique_filename():", org_path, "->", ret)
+        return ret
 
     def update(self):
         speed_ms = 0.0  # looks like zero = no limit detected, [m/s]
