@@ -412,7 +412,7 @@ class CarState(CarStateBase):
     #self._update_traffic_signals(cp_cam)
     #ret.cruiseState.speedLimit = self._calculate_speed_limit()
 
-    ret.cruiseState.speedLimit = self.TSR.update(cam_cp)
+    ret.cruiseState.speedLimit = self.TSR.update()
     
     #temp_sig = "BAP_VZA" # BAP_VZA HCA_1
     #print( ">>>", str(cam_cp.vl[temp_sig]), str(dict(cam_cp.vl_all[temp_sig])) )

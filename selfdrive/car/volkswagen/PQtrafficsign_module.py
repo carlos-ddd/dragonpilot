@@ -22,25 +22,26 @@ class PQtsr():
         self.log_filename_csv = self.log_path + "tsr/" + self.filename + ".csv"
         self.cnt = 0
 
-    def update(self, can_parser):
+    def update(self):
         speed_ms = 0.0  # looks like zero = no limit detected, [m/s]
 
-        detected_signs_lst = self.update_bap(can_parser, log=True)
+        detected_signs_lst = self.update_bap(log=True)
 
         return speed_ms
 
-    def update_bap(self, can_parser, log=False):
+    def update_bap(self, log=False):
 
         detected_signs_lst = []
 
-        raw_can_data = self.raw_can_receiver.update()
+        raw_can_data_lst = self.raw_can_receiver.update()
 
-#        bap_pkg = self.bap.receive_can(self.BAP_VZA_CAN_ID, raw_can_data)
-
-#        if bap_pkg != None:
-#            self.update_log(bap_pkg)
-#            self.parse_bap_vza(bap_pkg)
-        self.update_log_raw( raw_can_data )
+        for raw_can_data in raw_can_data_lst:
+            self.update_log_raw( raw_can_data )
+            print(">>>", raw_can_data)
+            bap_pkg = self.bap.receive_can(self.BAP_VZA_CAN_ID, raw_can_data)
+            if bap_pkg != None:
+                self.update_log(bap_pkg)
+                self.parse_bap_vza(bap_pkg)
 
         return detected_signs_lst
 
@@ -55,10 +56,10 @@ class PQtsr():
         log_file.write( str(bap_pkg) + "\n" )
         log_file.close()
 
-    def update_log_raw(self, can_parser_raw):
-        #if bool(can_parser_raw):  # check if dict can_parser_raw is empty
+    def update_log_raw(self, to_log):
+        #if bool(to_log):  # check if dict to_log is empty
         log_file = open(self.log_filename_csv, 'a')
-        log_file.write( str(can_parser_raw) + "\n" )
+        log_file.write( str(to_log) + "\n" )
         log_file.close()
 
 
