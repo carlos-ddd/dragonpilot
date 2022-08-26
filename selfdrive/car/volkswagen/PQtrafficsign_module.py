@@ -19,33 +19,34 @@ class PQtsr():
         self.startup_ts = self.get_ts_now(with_date=True)
         self.abs_path = "/data/openpilot/carlosddd/"
         self.log_path = self.abs_path + "logs/"
-        self.filename = "tsrLog" + "_" + self.startup_ts
 
-        log_filename_csv = self.log_path + "tsr/" + self.filename
-        self.log_filename_csv = self.unique_filename(log_filename_csv) + ".csv"
-
-        log_filename_csv_raw = self.log_path + "tsr/" + self.filename + "_raw"
-        self.log_filename_csv_raw = self.unique_filename(log_filename_csv_raw) + ".csv"
+        self.log_filename_csv = self.unique_filename(self.log_path, "tsrLog", "csv", self.startup_ts)
+        self.log_filename_csv_raw = self.unique_filename(self.log_path, "tsrLogRaw", "csv", self.startup_ts)
 
         self.cnt = 0
 
-    def unique_filename(self, org_path):
+    def unique_filename(self, path, log_type, filetype, time_stamp_str):
+        org_path = path + log_type + "_" + time_stamp_str + "." + filetype
         addon = 0
-        ret = org_path
+        addon_str = ""
         while True:
+            org_path = path + log_type + "_" + time_stamp_str + addon_str + "." + filetype
             if os.path.exists(org_path):
-                ret = org_path + "_" +str(addon)
+                addon_str = "__" + str(addon)
             else:
                 break
             addon += 1
-        print(">>> PQtrafficsign_module.py::unique_filename():", org_path, "->", ret)
-        return ret
+        print(">>> PQtrafficsign_module.py::unique_filename():", org_path)
+        return org_path
 
     def update(self):
         speed_ms = 0.0  # looks like zero = no limit detected, [m/s]
-
         detected_signs_lst = self.update_bap(log=True)
-
+        if not detected_signs_lst:  # list not empty
+            speed_kph = detected_signs_lst[0]   # so far we only evaluate the first traffic sign,
+                                                #  what ever that would mean !? (see parse_bap_vza())
+            speed_ms = speed_kph / 3.6
+            print(">>>", detected_signs_lst "->", speed_kph)
         return speed_ms
 
     def update_bap(self, log=False):
@@ -56,12 +57,12 @@ class PQtsr():
 
         for raw_can_data in raw_can_data_lst:
             self.update_log_raw( raw_can_data )
-            print(">>>", raw_can_data)
+            #print(">>>", raw_can_data)
             bap_pkg = self.bap.receive_can(self.BAP_VZA_CAN_ID, raw_can_data)
             if bap_pkg != None:
                 self.update_log(bap_pkg, decoded=True)
-                self.parse_bap_vza(bap_pkg)
-                print(">>>", bap_pkg)
+                #print(">>>", bap_pkg)
+                detected_signs_lst = self.parse_bap_vza(bap_pkg)
 
         return detected_signs_lst
 
@@ -90,15 +91,25 @@ class PQtsr():
 
 
     def parse_bap_vza(self, bap_pkg):
+        detected_signs_lst = []
+
         can_id, op_code, lsg_id, fct_id, bap_data = bap_pkg
         if can_id == self.BAP_VZA_CAN_ID:
             if lsg_id == self.BAP_VZA_LSG_ID:
-                pass
+                if fct_id==16 and op_code in [3,4] and bap_data[0]==1:  # see explanations below
+                    for itm in bap_data[1:]:
+                        if itm != 0:
+                            if 1 <= itm <= 210:
+                                detected_signs_lst.append(itm)
+                    
+
+        return detected_signs_lst
 
 
 
 # CANid 1691
-# lsg_id 16
+# lsg_id 33
+
 # fct_id 16
 
 # bap data (dec):
