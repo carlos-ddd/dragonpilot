@@ -132,7 +132,7 @@ class CarController():
       stock_hca_status =  CS.stock_HCA_Status
       stock_apply_steer = CS.stock_HCA_SteeringVal
 
-      # dp
+      # dp (carlos_ddd: looks like DP is checking some GUI option (like stop steering on blinker_on by zeroing apply_steer))
       blinker_on = CS.out.leftBlinker or CS.out.rightBlinker
       if not enabled:
         self.blinker_end_frame = 0
