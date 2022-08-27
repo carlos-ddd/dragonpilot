@@ -94,6 +94,10 @@ class Carlosddd_Logmodule:
         out_str = ""
         out_str += "k2-plot:"
         out_str += str(self.slice_cnt) + ":"
+        for idx, known_key in enumerate(known_keys):
+            out_str += str(known_key) + ","
+        out_str = out_str[:-1] # remove last comma
+        out_str += ":"
         for key in known_keys:
             for idx, d in enumerate(self.lst):
                 if key in d:
