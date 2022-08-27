@@ -23,7 +23,8 @@ class Carlosddd_Logmodule:
         self.first_run_csv = True
         self.first_run_octave = True
         self.json_path = self.abs_path + "config.json"
-        self.cnt = 0
+        self.cnt = 0    # index of measurement-sets (= all variables to capture), multiple (max_slices) measurement-sets are collected to one slice 
+        self.slice_cnt = 0  # number of slices (holdin n=max_slices measurement-sets)
         with open(self.json_path, 'r') as f:
             json_data = json.load(f)
         self.parse_json(json_data)
@@ -58,6 +59,7 @@ class Carlosddd_Logmodule:
                 self.output()
                 self.idx = 0
                 self.cnt += self.max_slices # do this after outputting!
+                self.slice_cnt += 1
 
     def print_lst(self):
         for idx, d in enumerate(self.lst):
@@ -91,6 +93,7 @@ class Carlosddd_Logmodule:
         #print("final key list", known_keys)
         out_str = ""
         out_str += "k2-plot:"
+        out_str += str(self.slice_cnt) + ":"
         for key in known_keys:
             for idx, d in enumerate(self.lst):
                 if key in d:
