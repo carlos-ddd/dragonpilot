@@ -105,6 +105,7 @@ class Carlosddd_Logmodule:
                 else:
                     out_str += 'nan'
                 out_str += ","
+            out_str = out_str[:-1] # remove last comma
             out_str += ";"
         out_str += ":::"
         print(out_str)
