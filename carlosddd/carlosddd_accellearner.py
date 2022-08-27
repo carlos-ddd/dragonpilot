@@ -98,7 +98,7 @@ class Carlosddd_Accellearner:
                 self.update_rolling(v_Ego, a_Ego)
 
         if self.mode != self.mode_old:
-            print(">>> carlosddd_accellearner.py: mode change", self.mode_old, "->" self.mode)
+            print(">>> carlosddd_accellearner.py: mode change", self.mode_old, "->", self.mode)
         self.mode_old = self.mode   # update mode
 
     def update_brake(self, v_Ego, a_Ego, gear, brake_val):
