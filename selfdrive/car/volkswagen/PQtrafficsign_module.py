@@ -46,7 +46,7 @@ class PQtsr():
             speed_kph = detected_signs_lst[0]   # so far we only evaluate the first traffic sign,
                                                 #  what ever that would mean !? (see parse_bap_vza())
             speed_ms = speed_kph / 3.6
-            print(">>>", detected_signs_lst "->", speed_kph)
+            print(">>>", detected_signs_lst, "->", speed_kph)
         return speed_ms
 
     def update_bap(self, log=False):
