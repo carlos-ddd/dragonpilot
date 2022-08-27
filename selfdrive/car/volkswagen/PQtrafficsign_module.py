@@ -42,7 +42,7 @@ class PQtsr():
     def update(self):
         speed_ms = 0.0  # looks like zero = no limit detected, [m/s]
         detected_signs_lst = self.update_bap(log=True)
-        if not detected_signs_lst:  # list not empty
+        if len(detected_signs_lst) > 0:
             speed_kph = detected_signs_lst[0]   # so far we only evaluate the first traffic sign,
                                                 #  what ever that would mean !? (see parse_bap_vza())
             speed_ms = speed_kph / 3.6
