@@ -102,9 +102,9 @@ class Carlosddd_Accellearner:
                 gasVal = 0
             gas_val = int(gasVal)       # OP commanding
             gas_inrange = (self.min_gas_val <= gas_val <= self.max_gas_val)
-            brake_val = int(brakeVal)   # OP commanding
             if numpy.isnan( float(brakeVal) ):
-                brake_val = 0
+                brakeVal = 0
+            brake_val = int(brakeVal)   # OP commanding
             brake_inrange = (self.min_brake <= brake_val <= self.max_brake)
             pedal_val = int(pedalVal)   # driver commanding (gas pedal)
             pedal_inrange = (self.min_gas_val <= pedal_val <= self.max_gas_val)
