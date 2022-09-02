@@ -2,6 +2,7 @@ import numpy
 import math
 import datetime
 import json
+import os.path
 
 
 class Carlosddd_Logmodule:
@@ -25,8 +26,7 @@ class Carlosddd_Logmodule:
         self.json_path = self.abs_path + "config.json"
         self.cnt = 0    # index of measurement-sets (= all variables to capture), multiple (max_slices) measurement-sets are collected to one slice 
         self.slice_cnt = 0  # number of slices (holdin n=max_slices measurement-sets)
-        with open(self.json_path, 'r') as f:
-            json_data = json.load(f)
+        json_data = self.load_json(self.json_path)
         self.parse_json(json_data)
         #print(self.config_print_output, self.config_output_octave, self.config_output_csv)
         self.inhibit_log = not any([self.config_print_output, self.config_output_octave, self.config_output_csv])
@@ -37,6 +37,11 @@ class Carlosddd_Logmodule:
             self.lst.append(d)
             self.lst_ts.append(0)
         #self.print_lst()
+
+    def load_json(self, json_path):
+        with open(json_path, 'r') as f:
+            json_data = json.load(f)
+        return json_data
 
     def parse_json(self, json_data):
         self.config_print_output =  bool(json_data['output_prints'])

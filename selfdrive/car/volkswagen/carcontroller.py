@@ -7,6 +7,7 @@ from opendbc.can.packer import CANPacker
 from common.dp_common import common_controller_ctrl
 from carlosddd.carlosddd_logmodule import Carlosddd_Logmodule
 from carlosddd.carlosddd_acceltest import Carlosddd_Acceltest
+from carlosddd.carlosddd_accellearner import Carlosddd_Accellearner
 from selfdrive.controls.lib.pid import PIController
 from common.realtime import DT_CTRL
 
@@ -60,6 +61,7 @@ class CarController():
 
     self.CdddL = Carlosddd_Logmodule("LoC")
     self.CdddA = Carlosddd_Acceltest()
+    self.CdddAL = Carlosddd_Accellearner()
     
     self.pid = PIController((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
                             (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
@@ -102,7 +104,7 @@ class CarController():
       # torque value. Do that anytime we happen to have 0 torque, or failing that,
       # when exceeding ~1/3 the 360 second timer.
 
-
+      #if enabled and not (CS.out.standstill or CS.steeringFault): # K2: old
       if c.active and CS.out.vEgo > CS.CP.minSteerSpeed and not (CS.out.standstill or CS.out.steerError or CS.out.steerWarning):
         new_steer = int(round(actuators.steer * P.STEER_MAX))
         apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, P)
@@ -525,5 +527,7 @@ class CarController():
         self.CdddL.update('detected_gear', CS.detected_gear)
         self.CdddL.update('engineRPM', CS.out.engineRPM)
         self.CdddL.slice_done()
+
+    self.CdddAL.update(enabled, CS.out.vEgo, CS.out.aEgo, CS.out.clutchPressed, CS.detected_gear, CS.out.engineRPM, apply_gas, apply_brake, CS.out.gas, CS.leergas, CS.out.brakePressed)
 
     return new_actuators, can_sends
