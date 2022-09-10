@@ -24,7 +24,7 @@ class CarController():
 
     self.mobPreEnable = False
     self.mobEnabled = False
-    self.mobBrakingProhibited = True
+    self.mobBrakingProhibited = False
 
     self.radarVin_idx = 0
 
@@ -192,10 +192,10 @@ class CarController():
         # now to reenable braking we need to have reached a safe (soft) braking region
         # or the release of the gas pedal could make for an immediate hard braking
         # which has (obviously) built up in the background (remember: OP wanted to brake)
-        if (apply_brake < 300) and (actuators.accel > -0.5):    # MOB-raw, ms/2
+        if (apply_brake < 200) and (actuators.accel > -0.5):    # MOB-raw, ms/2
           self.mobBrakingProhibited = False     # allow braking again
 
-      if enabled: # and not self.mobBrakingProhibited:
+      if enabled and not self.mobBrakingProhibited:
         if (apply_brake < 0):
           apply_brake = 0
         if apply_brake > 0:

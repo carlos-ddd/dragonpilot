@@ -359,7 +359,7 @@ class CarState(CarStateBase):
       self.openpilot_enabled = False
 
     # Check if Gas or Brake pressed and override ACC emulation
-    if self.CP.enableGasInterceptor and (ret.gasPressed or ret.brakePressed):
+    if self.CP.enableGasInterceptor and (ret.brakePressed): # or ret.gasPressed):
       self.openpilot_enabled = False
 
     # Override openpilot enabled if gas interceptor installed
