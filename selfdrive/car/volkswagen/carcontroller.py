@@ -195,7 +195,7 @@ class CarController():
         if (apply_brake < 200) and (actuators.accel > -0.5):    # MOB-raw, ms/2
           self.mobBrakingProhibited = False     # allow braking again
 
-      if enabled and not self.mobBrakingProhibited:
+      if enabled: # and not self.mobBrakingProhibited:
         if (apply_brake < 0):
           apply_brake = 0
         if apply_brake > 0:
