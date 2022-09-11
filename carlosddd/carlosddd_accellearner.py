@@ -72,9 +72,9 @@ class Carlosddd_Accellearner:
         self.config_learn_coast =  bool(json_data['learn_coast']) and self.config_learn
         self.config_learn_roll =  bool(json_data['learn_roll']) and self.config_learn
         if not any( [self.config_learn_gas, self.config_learn_brake, self.config_learn_coast, self.config_learn_roll] ):
-            self.skip_learn = False
-        else:
             self.skip_learn = True
+        else:
+            self.skip_learn = False
 
     def init_gas(self):
         self.gas_data = []              # [gear][gas_val][rpm] = aEgo
