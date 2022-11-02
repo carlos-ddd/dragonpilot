@@ -395,7 +395,11 @@ class CarState(CarStateBase):
 
     # Check to make sure the electric power steering rack is configured to
     # accept and respond to HCA_01 messages and has not encountered a fault.
-    self.steeringFault = pt_cp.vl["Lenkhilfe_2"]['LH2_Sta_HCA'] not in [1, 3, 5, 7] # 1 missing in newer configs ???? carlos_ddd
+    #self.steeringFault = pt_cp.vl["Lenkhilfe_2"]['LH2_Sta_HCA'] not in [1, 3, 5, 7] # 1 missing in newer configs, used in 0.8.2 ???? carlos_ddd
+    # Verify EPS readiness to accept steering commands
+    hca_status = pt_cp.vl["Lenkhilfe_2"]["LH2_Sta_HCA"] # 0=HCA disabled, 1=unavail init no DTC, 2=error with DTC, 3=ready/standby, 4=denied, 5&7=steering
+    ret.steerError = hca_status in [0, 2]
+    ret.steerWarning = hca_status in [1, 4]
 
     # Read ABS pump for checking in ACC braking is working.
     if self.CP.enableGasInterceptor:
