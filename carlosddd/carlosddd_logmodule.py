@@ -9,13 +9,17 @@ class Carlosddd_Logmodule:
     """
     """
 
-    def __init__(self, name="defaultLog", max_slices=10):
+    def __init__(self, name="defaultLog", test_environment=False, max_slices=10):
         self.lst = []
         self.lst_ts = [] # timestamps
+        self.test_environment = test_environment
         self.idx = 0
         self.max_slices = max_slices
         self.startup_ts = self.get_ts_now(with_date=True)
-        self.abs_path = "/data/openpilot/carlosddd/"
+        if not self.test_environment:
+            self.abs_path = "/data/openpilot/carlosddd/"    # in OP environment (C2) we need to use absolut path
+        else:
+            self.abs_path = ""  # for testing use this folder here (windows)
         self.log_path = self.abs_path + "logs/"
         self.name = name
         self.filename = self.name + "_" + self.startup_ts + "_log"
@@ -49,9 +53,12 @@ class Carlosddd_Logmodule:
         self.config_output_csv =  bool(json_data['output_csv'])
         self.config_csv_seperator = str(json_data['csv_seperator'])
 
-    def update(self, key, value):
+    def update(self, key, value, convert=False):
         if not self.inhibit_log:
             #print("Adding", value, "to key", key)
+            if convert:
+                if isinstance(value, bool):
+                    value = 1 if value else 0
             self.lst[self.idx][key] = value
             self.lst_ts[self.idx] = self.get_ts_now()
 
@@ -159,5 +166,5 @@ class Carlosddd_Logmodule:
                     out_str += 'NaN'
                 out_str += ","
             out_str = out_str[:-1] # remove last comma
-            log_file.write(out_str + ";" + "\n")
+            log_file.write(out_str + "\n")
         log_file.close()

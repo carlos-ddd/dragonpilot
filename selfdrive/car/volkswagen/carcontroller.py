@@ -75,7 +75,7 @@ class CarController():
   def update(self, c, enabled, CS, frame, ext_bus, actuators, visual_alert, audible_alert, left_lane_visible, right_lane_visible, left_lane_depart, right_lane_depart, dragonconf):
     """ Controls thread """
 
-    CdddL_hook = False
+    CdddL_hook = True # log every function call, set to False to only have when gas / brake CAN message is sent
 
     cddda_apply_gas, cddda_apply_brake, cddda_active = self.CdddA.update(enabled, CS.out.vEgo, CS.out.aEgo, CS.out.clutchPressed, CS.out.gasPressed, CS.detected_gear, CS.out.engineRPM)
 
@@ -348,12 +348,19 @@ class CarController():
         
         request_turnsignal_val = 0 # not yet implemented
 
-        op_setspeed = 0 #setSpeed #CS.out.cruiseState.speed * CV.MS_TO_KPH
+        op_setspeed = 0 #setSpeed #CS.out.cruiseState.speed * CV.MS_TO_KPH or look at the CC.update()-call in interface.py (apply() around line 343)
+        
+        accel_val_scaled = actuators.accel*100.0    # we want milli-m/s^2
+        accel_val = abs(int(accel_val_scaled))
+        accel_mode = 0      # 0=no request, 1=request gas, 2=request brake
+        accel_inhibits = 0  # 0=no inhibitions, 1=no gas, 2=no brake
+        accel_format = 0    # 0=undefined, 1=int milli-m/s^2, 2=raw(12bit gas, mMOB brake)
+        accel_signbit = True if accel_val_scaled<0.0 else False
 
         idx = (frame / P.OPSTA_STEP) % 16 # counter
 
         can_sends.append(
-          self.create_opsta_control(self.packer_pt, CANBUS.br, idx, op_engaged, lead_distance, ledbar_val, sound_val, op_fcw, request_turnsignal_val, op_setspeed))
+          self.create_opsta_control(self.packer_pt, CANBUS.br, idx, op_engaged, lead_distance, ledbar_val, sound_val, op_fcw, request_turnsignal_val, op_setspeed, accel_val, accel_mode, accel_inhibits, accel_format, accel_signbit))
 
     # --------------------------------------------------------------------------
     #                                                                         #
@@ -530,6 +537,12 @@ class CarController():
         self.CdddL.update('apply_gas', apply_gas)
         self.CdddL.update('detected_gear', CS.detected_gear)
         self.CdddL.update('engineRPM', CS.out.engineRPM)
+        self.CdddL.update('clutchPressed', CS.out.clutchPressed, convert=True)
+        self.CdddL.update('ecuGas', CS.out.gas)
+        self.CdddL.update('ecuLeergas', CS.leergas, convert=True)
+        self.CdddL.update('brakePressed', CS.out.brakePressed, convert=True)
+        self.CdddL.update('cddda_active', cddda_active, convert=True)
+        self.CdddL.update('enabled', enabled, convert=True)
         self.CdddL.slice_done()
 
     self.CdddAL.update(enabled, CS.out.vEgo, CS.out.aEgo, CS.out.clutchPressed, CS.detected_gear, CS.out.engineRPM, apply_gas, apply_brake, CS.out.gas, CS.leergas, CS.out.brakePressed)

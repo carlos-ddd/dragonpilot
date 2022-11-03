@@ -3,9 +3,9 @@
     "output_octave": false,
     "output_csv": true,
     "csv_seperator": ",",
-    "learn": true,
-    "learn_brake": true,
-    "learn_gas": true,
-    "learn_coast": true,
-    "learn_roll": true
+    "learn": false,
+    "learn_brake": false,
+    "learn_gas": false,
+    "learn_coast": false,
+    "learn_roll": false
 }

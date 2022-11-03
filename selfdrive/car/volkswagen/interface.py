@@ -338,7 +338,7 @@ class CarInterface(CarInterfaceBase):
     self.CS.out = ret.as_reader()
     return self.CS.out
 
-  def apply(self, c):
+  def apply(self, c):   # called from \selfdrive\controls\controlsd.py
     hud_control = c.hudControl
     ret = self.CC.update(c, c.enabled, self.CS, self.frame, self.ext_bus, c.actuators,
                          hud_control.visualAlert,
