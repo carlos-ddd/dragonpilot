@@ -1533,10 +1533,10 @@ BO_ 1040 mOP_Status1: 8 OP
  SG_ OPS1_FCW : 21|1@1+ (1,0) [0|1] "" XXX
  SG_ OPS1_turnsignal_request : 22|2@1+ (1,0) [0|4] "" XXX
  SG_ OPS1_set_speed : 24|8@1+ (1,0) [0|255] "kmh" XXX
- SG_ OPS1_accel_val : 32|16@1+ (1,0) [0|1] "" XXX
- SG_ OPS1_accel_mode : 48|2@1+ (1,0) [0|1] "" XXX
- SG_ OPS1_accel_inhibits : 50|2@1+ (1,0) [0|1] "" XXX
- SG_ OPS1_accel_format : 52|2@1+ (1,0) [0|1] "" XXX
+ SG_ OPS1_accel_val : 32|16@1+ (1,0) [0|65535] "" XXX
+ SG_ OPS1_accel_mode : 48|2@1+ (1,0) [0|3] "" XXX
+ SG_ OPS1_accel_inhibits : 50|2@1+ (1,0) [0|3] "" XXX
+ SG_ OPS1_accel_format : 52|2@1+ (1,0) [0|3] "" XXX
  SG_ OPS1_accel_signbit: 54|1@1+ (1,0) [0|1] "" XXX
  SG_ OPS1_void : 55|9@1+ (1,0) [0|1] "" XXX
 
