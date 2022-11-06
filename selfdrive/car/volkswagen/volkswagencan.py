@@ -145,13 +145,13 @@ def create_pq_awv_control(packer, bus, idx, led_orange, led_green, abs_working, 
 #  values["ACA_Checksum"] = dat[1] ^ dat[2] ^ dat[3] ^ dat[4] ^ dat[5] ^ dat[6] ^ dat[7]
 #  return packer.make_can_msg("ACC_GRA_Anziege", bus, values)
 
-def create_pq_opsta_control(packer, bus, idx, op_engaged, lead_distance, ledbar_val, sound_val, op_fcw, request_turnsignal_val, op_setspeed, accel, accel_mode, accel_inhibits, accel_format, accel_signbit):
+def create_pq_opsta_control(packer, bus, idx, op_engaged, lead_distance, ledbar_val, sound_val, op_fcw, request_turnsignal_val, op_setspeed, accel_val, accel_mode, accel_inhibits, accel_format, accel_signbit):
   values = {
     "OPS1_accel_signbit": 1 if accel_signbit else 0,
     "OPS1_accel_format": accel_format if (0<=accel_format<=3) else 3,   # 3=error
     "OPS1_accel_inhibits": accel_inhibits if (0<=accel_inhibits<=3) else 3,   # 3=error
     "OPS1_accel_mode": accel_mode if (0<=accel_mode<=3) else 3,   # 3=error
-    "OPS1_accel": int(accel) if (0<=int(accel)<=65535) else 0,
+    "OPS1_accel_val": int(accel_val) if (0<=int(accel_val)<=65535) else 0,
     "OPS1_set_speed": op_setspeed,
     "OPS1_turnsignal_request": request_turnsignal_val if (0<=request_turnsignal_val<=3) else 3,   # 3=error
     "OPS1_FCW": 1 if op_fcw else 0,
