@@ -25,13 +25,16 @@ class PQacc():
             "falling"   : "v"
     }
 
-    def __init__(self, v_min=1., v_max=210., v_step=10., v_lst=[125], engage_below_vmin=False, round_at_set=True):
+    def __init__(self, v_min=1., v_max=210., v_step=10., v_lst=[125], dist_maxval=2 , dist_long_maxval=2 , longpress_timer=100 , engage_below_vmin=False, round_at_set=True):
         self.v_min = v_min
         self.v_max = v_max
         self.v_step = v_step
         self.v_lst = v_lst
         self.engage_below_vmin = engage_below_vmin
         self.round_at_set = round_at_set
+        self.dist_longpress_timer = longpress_timer # counting calls of function, not time
+        self.dist_maxval = dist_maxval # maximum value of distance (between 0 and this value)
+        self.dist_long_maxval = dist_long_maxval # maximum value of distance longpress (between 0 and this value)
         self.assign_default_vals()
 
     def assign_default_vals(self):
@@ -40,10 +43,13 @@ class PQacc():
         self.longCtrl_coast = False
         self.v_mem = float('NaN')
         self.dist = 0
+        self.dist_long = 0
+        self.dist_val_raw_old = 0
         self.buttonStatesOld = BUTTON_STATES.copy()
         self.buttonActionsOld = BUTTON_STATES.copy()
         self.v_disp = float('NaN')
         self.op_engagedOld = False
+        self.dist_longpress_timer_val = 0
 
     def inp_mainSW(self, GRA_Haupt):
         if not GRA_Haupt:                                           # reinit with default values
@@ -118,7 +124,7 @@ class PQacc():
         return btnAct
 
 
-    def update_acc(self, v_Ego, btnAct_old, btnAct_new, GRA_Haupt, op_disengageTrg, stockGRA_active=False):
+    def update_acc(self, v_Ego, btnAct_old, btnAct_new, btnSta_new, GRA_Haupt, op_disengageTrg, stockGRA_active=False):
         '''
         takes button actions and dispatches them to the appropriate handling functions
         - priority is first decided here by if-elseif-else
@@ -135,10 +141,10 @@ class PQacc():
                 if btnAct_old['cancel'] != btnAct_new['cancel']:
                     if not stockGRA_active: # in case of the stock VW GRA not being dropped yet -> allow for drop until OPacc evaluates cancle-button-presses
                         self.handle_cancelBtn(btnAct_new)
-                elif btnAct_old['gapAdjustCruise'] != btnAct_new['gapAdjustCruise']:
-                    self.handle_distBtn(btnAct_new)
                 else:
                     self.handle_speedBtn(v_Ego, btnAct_new)
+            # allow always (as long as GRA-Haupt is not off)
+            self.handle_distBtn(btnAct_new, btnSta_new) # alternativ (old) only on change elif btnAct_old['gapAdjustCruise'] != btnAct_new['gapAdjustCruise']:
         else:   # after GRA off -> default values
             self.assign_default_vals()
 
@@ -161,7 +167,7 @@ class PQacc():
 
         btnAct_new = self.get_btnActions(self.buttonStatesOld, btnSta_new)                      # calculate button actions
 #        self.prnt_btnActionShort(btnAct_new, True, True)
-        self.update_acc(v_Ego, self.buttonActionsOld, btnAct_new, GRA_Haupt, op_disengageTrg, stockGRA_active)   # pass button actions
+        self.update_acc(v_Ego, self.buttonActionsOld, btnAct_new, btnSta_new, GRA_Haupt, op_disengageTrg, stockGRA_active)   # pass button actions
 
         # save old states
         self.buttonStatesOld = btnSta_new.copy()
@@ -177,7 +183,7 @@ class PQacc():
         '''
         self.update_acc_iter(v_Ego, btnSta_new, GRA_Haupt, op_engaged, stockGRA_active)
         v_4CS = self.v_set if self.get_vset_valid() else (self.v_disp if self.get_vdisp_valid() else 88.)
-        return self.longCtrl_engaged, v_4CS
+        return self.longCtrl_engaged, v_4CS, self.dist, self.dist_long
 
     def handle_speedBtn(self, v_Ego, btnAct):
         '''
@@ -352,10 +358,75 @@ class PQacc():
         self.v_set = float('NaN')
 
 
-    def handle_distBtn(self, btnAct):
+    def handle_distBtn(self, btnAct, btnSta_new):
         '''
         handles distance button
         '''
-        pass
+        retVal = float('NaN')
+        dist_val_raw = btnSta_new['gapAdjustCruise']
+        if (dist_val_raw == 3) or numpy.isnan(self.dist_val_raw_old):
+            # error, no evaluation possible
+            self.dist = 0 #float('NaN')
+            self.dist_long = 0 #float('NaN')
+        else:
+            if (self.dist_val_raw_old == 0) and (dist_val_raw == 1):
+                # rising Dist-
+                self.dist_longpress_timer_val = 0
+            elif (self.dist_val_raw_old == 0) and (dist_val_raw == 2):
+                # rising Dist+
+                self.dist_longpress_timer_val = 0
+            elif (self.dist_val_raw_old == 1) and (dist_val_raw == 1):
+                # high Dist-
+                self.dist_longpress_timer_val += 1
+            elif (self.dist_val_raw_old == 2) and (dist_val_raw == 2):
+                # high Dist+
+                self.dist_longpress_timer_val += 1
+            elif (self.dist_val_raw_old == 1) and (dist_val_raw == 0):
+                # ==============
+                # falling Dist-
+                # ==============
+                if self.dist_longpress_timer_val > self.dist_longpress_timer:
+                    # -------------------
+                    # longpress detected
+                    # -------------------
+                    if self.dist_long - 1 < 0:
+                        self.dist_long = 0
+                    else:
+                        self.dist_long -= 1
+                else:
+                    # -------------------
+                    # shortpress detected
+                    # -------------------
+                    if self.dist - 1 < 0:
+                        self.dist = 0
+                    else:
+                        self.dist -= 1
+                self.dist_longpress_timer_val = 0
+            elif (self.dist_val_raw_old == 2) and (dist_val_raw == 0):
+                # ==============
+                # falling Dist+
+                # ==============
+                if self.dist_longpress_timer_val > self.dist_longpress_timer:
+                    # -------------------
+                    # longpress detected
+                    # -------------------
+                    if self.dist_long + 1 > self.dist_long_maxval:
+                        self.dist_long = self.dist_long_maxval
+                    else:
+                        self.dist_long += 1
+                else:
+                    # -------------------
+                    # shortpress detected
+                    # -------------------
+                    if self.dist + 1 > self.dist_maxval:
+                        self.dist = self.dist_maxval
+                    else:
+                        self.dist += 1
+                self.dist_longpress_timer_val = 0
+            else:
+                self.dist_longpress_timer_val = 0   # reset
+        self.dist_val_raw_old = dist_val_raw    # update for next iteration
+        print(self.dist_longpress_timer_val)
+        return self.dist, self.dist_long
 
 

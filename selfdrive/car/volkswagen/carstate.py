@@ -292,7 +292,6 @@ class CarState(CarStateBase):
     self.desired_gear = acc_cp.vl["Getriebe_2"]['eingelegte_Fahrstufe']
 
     ret.engineRPM = pt_cp.vl["Motor_1"]['Motordrehzahl']
-    #ret.engineRPM = 1000 + (self.detected_gear*10) + self.desired_gear  # for debugging only!
 
     self.leergas = bool(pt_cp.vl["Motor_1"]['Leergasinformation'])
 
@@ -348,7 +347,7 @@ class CarState(CarStateBase):
     ret.cruiseState.available = bool(pt_cp.vl["GRA_Neu"]['GRA_Hauptschalt'])
     ret.cruiseState.enabled = True if pt_cp.vl["Motor_2"]['GRA_Status'] in [1, 2] else False
     # ACC emulation (overwriting cruiseState-values from CAN)
-    self.ACC_engaged, self.v_ACC = self.ACC.update_acc_iter_4CS(ret.vEgo*CV.MS_TO_KPH, self.buttonStates, ret.cruiseState.available, self.openpilot_enabled, ret.cruiseState.enabled)
+    self.ACC_engaged, self.v_ACC, self.dist_profile, self.accel_profile = self.ACC.update_acc_iter_4CS(ret.vEgo*CV.MS_TO_KPH, self.buttonStates, ret.cruiseState.available, self.openpilot_enabled, ret.cruiseState.enabled)
     # Engage open pilot if ACC emulation says so
     if self.CP.enableGasInterceptor and self.ACC_engaged:
       self.openpilot_enabled = True
@@ -409,19 +408,25 @@ class CarState(CarStateBase):
     # copied from toyota carstate.py
     # traffic sign recognition
     ret.cruiseState.speedLimit = self.TSR.update()
-    # follow distance ?
-    #ret.distanceLines = cp.vl["PCM_CRUISE_SM"]["DISTANCE_LINES"] # this is used by selfdrive\controls\lib\longitudinal_mpc_lib\long_mpc.py
-                                                                  # 1=Traffic, 2=Relaxed, else=?normal?
 
+    # follow distance ?
+    ret.distanceLines = self.dist_profile # this is used by selfdrive\controls\lib\longitudinal_mpc_lib\long_mpc.py
+                                                                  # 1=Traffic, 2=Relaxed, else=?normal?
     # PROFILE
     # used in selfdrive\controls\lib\longitudinal_planner.py but it's not clear if this is just an overwrite of the DP-GUI toggles/settings
     #   see common\dp_conf.py
-    #if sport_on == 0 and econ_on == 0:
-    #  self.dp_accel_profile = DP_ACCEL_NORMAL
-    #elif sport_on == 1:
-    #  self.dp_accel_profile = DP_ACCEL_SPORT
-    #elif econ_on == 1:
-    #  self.dp_accel_profile = DP_ACCEL_ECO
+    if self.accel_profile  == 1:
+      self.dp_accel_profile = DP_ACCEL_SPORT
+    elif self.accel_profile  == 2:
+      self.dp_accel_profile = DP_ACCEL_ECO
+    else:
+        self.dp_accel_profile = DP_ACCEL_NORMAL
+
+    # DEBUGGING -> overwriting!
+    engineRPM_fake = int(ret.engineRPM / 100)*100   # zero last to digits, keep thousands and hundreds original (for logging)
+    engineRPM_fake += int(self.accel_profile*10)    # ten's digit
+    engineRPM_fake += int(self.dist_profile)        # one's digit
+    ret.engineRPM = engineRPM_fake  # for debugging only!
 
     return ret
 
