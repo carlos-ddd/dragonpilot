@@ -339,7 +339,7 @@ class CarState(CarStateBase):
     self.buttonStates["cancel"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Abbrechen'])
     self.buttonStates["setCruise"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Neu_Setzen'])
     self.buttonStates["resumeCruise"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Recall'])
-    self.buttonStates["gapAdjustCruise"] = int(pt_cp.vl["GRA_Neu"]['GRA_Zeitluecke'])
+    self.buttonStates["gapAdjustCruise"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Zeitluecke'])
     self.buttonStates["longUp"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Up_lang'])
     self.buttonStates["longDown"] = bool(pt_cp.vl["GRA_Neu"]['GRA_Down_lang'])
     # Update ACC radar status.
@@ -347,7 +347,8 @@ class CarState(CarStateBase):
     ret.cruiseState.available = bool(pt_cp.vl["GRA_Neu"]['GRA_Hauptschalt'])
     ret.cruiseState.enabled = True if pt_cp.vl["Motor_2"]['GRA_Status'] in [1, 2] else False
     # ACC emulation (overwriting cruiseState-values from CAN)
-    self.ACC_engaged, self.v_ACC, self.dist_profile, self.accel_profile = self.ACC.update_acc_iter_4CS(ret.vEgo*CV.MS_TO_KPH, self.buttonStates, ret.cruiseState.available, self.openpilot_enabled, ret.cruiseState.enabled)
+    self.gap_adjust_raw = int(pt_cp.vl["GRA_Neu"]['GRA_Zeitluecke'])
+    self.ACC_engaged, self.v_ACC, self.dist_profile, self.accel_profile = self.ACC.update_acc_iter_4CS(ret.vEgo*CV.MS_TO_KPH, self.buttonStates, self.gap_adjust_raw, ret.cruiseState.available, self.openpilot_enabled, ret.cruiseState.enabled)
     # Engage open pilot if ACC emulation says so
     if self.CP.enableGasInterceptor and self.ACC_engaged:
       self.openpilot_enabled = True

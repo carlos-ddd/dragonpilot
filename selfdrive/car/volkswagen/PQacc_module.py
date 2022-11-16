@@ -124,7 +124,7 @@ class PQacc():
         return btnAct
 
 
-    def update_acc(self, v_Ego, btnAct_old, btnAct_new, btnSta_new, GRA_Haupt, op_disengageTrg, stockGRA_active=False):
+    def update_acc(self, v_Ego, btnAct_old, btnAct_new, btnSta_new, gap_adjust_raw, GRA_Haupt, op_disengageTrg, stockGRA_active=False):
         '''
         takes button actions and dispatches them to the appropriate handling functions
         - priority is first decided here by if-elseif-else
@@ -144,7 +144,7 @@ class PQacc():
                 else:
                     self.handle_speedBtn(v_Ego, btnAct_new)
             # allow always (as long as GRA-Haupt is not off)
-            self.handle_distBtn(btnAct_new, btnSta_new) # alternativ (old) only on change elif btnAct_old['gapAdjustCruise'] != btnAct_new['gapAdjustCruise']:
+            self.handle_distBtn(btnAct_new, btnSta_new, gap_adjust_raw) # alternativ (old) only on change elif btnAct_old['gapAdjustCruise'] != btnAct_new['gapAdjustCruise']:
         else:   # after GRA off -> default values
             self.assign_default_vals()
 
@@ -158,7 +158,7 @@ class PQacc():
        # longDown          X           X       X    (automatically set after ~500ms holding and falling with decelCruise)
 
 
-    def update_acc_iter(self, v_Ego, btnSta_new, GRA_Haupt, op_engaged, stockGRA_active=False):
+    def update_acc_iter(self, v_Ego, btnSta_new, gap_adjust_raw, GRA_Haupt, op_engaged, stockGRA_active=False):
         '''
         Takes new button states and calls appropriate actions to evaluate
         then saves old button states for next step
@@ -167,21 +167,21 @@ class PQacc():
 
         btnAct_new = self.get_btnActions(self.buttonStatesOld, btnSta_new)                      # calculate button actions
 #        self.prnt_btnActionShort(btnAct_new, True, True)
-        self.update_acc(v_Ego, self.buttonActionsOld, btnAct_new, btnSta_new, GRA_Haupt, op_disengageTrg, stockGRA_active)   # pass button actions
+        self.update_acc(v_Ego, self.buttonActionsOld, btnAct_new, btnSta_new, gap_adjust_raw, GRA_Haupt, op_disengageTrg, stockGRA_active)   # pass button actions
 
         # save old states
         self.buttonStatesOld = btnSta_new.copy()
         self.buttonActionsOld = btnAct_new.copy()
         self.op_engagedOld = op_engaged
 
-    def update_acc_iter_4CS(self, v_Ego, btnSta_new, GRA_Haupt, op_engaged, stockGRA_active=False):
+    def update_acc_iter_4CS(self, v_Ego, btnSta_new, gap_adjust_raw, GRA_Haupt, op_engaged, stockGRA_active=False):
         '''
         workaround wrapper function to use OPacc directly in carstate.py
         this function returns desired engagement status of OP (for engage / disengage)
         and a always valid setspeed for OP (as opposed to update_acc_iter() / update_acc()
         which will turn setspeed to 'NaN' if not engaged
         '''
-        self.update_acc_iter(v_Ego, btnSta_new, GRA_Haupt, op_engaged, stockGRA_active)
+        self.update_acc_iter(v_Ego, btnSta_new, gap_adjust_raw, GRA_Haupt, op_engaged, stockGRA_active)
         v_4CS = self.v_set if self.get_vset_valid() else (self.v_disp if self.get_vdisp_valid() else 88.)
         return self.longCtrl_engaged, v_4CS, self.dist, self.dist_long
 
@@ -358,12 +358,12 @@ class PQacc():
         self.v_set = float('NaN')
 
 
-    def handle_distBtn(self, btnAct, btnSta_new):
+    def handle_distBtn(self, btnAct, btnSta_new, gap_adjust_raw):
         '''
         handles distance button
         '''
         retVal = float('NaN')
-        dist_val_raw = btnSta_new['gapAdjustCruise']
+        dist_val_raw = gap_adjust_raw
         if (dist_val_raw == 3) or numpy.isnan(self.dist_val_raw_old):
             # error, no evaluation possible
             self.dist = 0 #float('NaN')
