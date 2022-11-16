@@ -538,11 +538,13 @@ class CarController():
         self.CdddL.update('detected_gear', CS.detected_gear)
         self.CdddL.update('engineRPM', CS.out.engineRPM)
         self.CdddL.update('clutchPressed', CS.out.clutchPressed, convert=True)
-        self.CdddL.update('ecuGas', CS.out.gas)
+        self.CdddL.update('ecuGas', CS.gas_ecu)
         self.CdddL.update('ecuLeergas', CS.leergas, convert=True)
         self.CdddL.update('brakePressed', CS.out.brakePressed, convert=True)
         self.CdddL.update('cddda_active', cddda_active, convert=True)
         self.CdddL.update('enabled', enabled, convert=True)
+        self.CdddL.update('pedal1', CS.gasInterceptorSensor1) # CS.gas is simply (gasInterceptorSensor1+gasInterceptorSensor2)/2 -> calculated yourself in numpy!
+        self.CdddL.update('pedal2', CS.gasInterceptorSensor2)
         self.CdddL.slice_done()
 
     self.CdddAL.update(enabled, CS.out.vEgo, CS.out.aEgo, CS.out.clutchPressed, CS.detected_gear, CS.out.engineRPM, apply_gas, apply_brake, CS.out.gas, CS.leergas, CS.out.brakePressed)

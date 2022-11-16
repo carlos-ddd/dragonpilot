@@ -249,6 +249,8 @@ class CarState(CarStateBase):
       #ret.gas = (cam_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS'] + cam_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS2']) / 2.
       ret.gasPressed = ret.gas > 468
       #print(">>> carstate.py gasInterceptorSensor1:", self.gasInterceptorSensor1, "gasInterceptorSensor2", self.gasInterceptorSensor2)
+      self.gas_ecu = pt_cp.vl["Motor_3"]['Fahrpedal_Rohsignal'] / 100.0
+    self.leergas = bool(pt_cp.vl["Motor_1"]['Leergasinformation'])
 
     ret.brake = pt_cp.vl["Bremse_5"]['Bremsdruck'] / 250.0  # FIXME: this is pressure in Bar, not sure what OP expects
     ret.brakePressed = bool(pt_cp.vl["Motor_2"]['Bremstestschalter'])
@@ -292,8 +294,6 @@ class CarState(CarStateBase):
     self.desired_gear = acc_cp.vl["Getriebe_2"]['eingelegte_Fahrstufe']
 
     ret.engineRPM = pt_cp.vl["Motor_1"]['Motordrehzahl']
-
-    self.leergas = bool(pt_cp.vl["Motor_1"]['Leergasinformation'])
 
     # Consume blind-spot monitoring info/warning LED states, if available. The
     # info signal (LED on) is enabled whenever a vehicle is detected in the
