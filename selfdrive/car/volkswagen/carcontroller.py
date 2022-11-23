@@ -373,7 +373,7 @@ class CarController():
 
       self.coastingAccel = interp(CS.out.vEgo, P.COASTING_LOOKUP_BP, P.COASTING_LOOKUP_V)   # new Edgy
 
-      if enabled and not CS.out.clutchPressed:
+      if enabled and not ( CS.out.clutchPressed or CS.gas_inhibit ):
 
         #apply_gas = clip(actuators.gas, 0., 1.)     # old v0.8.2
 
