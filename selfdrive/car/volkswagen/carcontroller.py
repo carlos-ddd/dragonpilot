@@ -348,7 +348,7 @@ class CarController():
         
         request_turnsignal_val = 0 # not yet implemented
 
-        op_setspeed = int(CS.out.cruiseState.speed * CV.MS_TO_KPH) #setSpeed #CS.out.cruiseState.speed * CV.MS_TO_KPH or look at the CC.update()-call in interface.py (apply() around line 343)
+        op_setspeed = int(CS.out.cruiseState.speed * 3.6) #setSpeed #CS.out.cruiseState.speed * CV.MS_TO_KPH or look at the CC.update()-call in interface.py (apply() around line 343)
         
         accel_val_scaled = actuators.accel*100.0    # we want milli-m/s^2
         accel_val = abs(int(accel_val_scaled))
