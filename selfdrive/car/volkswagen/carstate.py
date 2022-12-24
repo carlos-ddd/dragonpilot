@@ -349,7 +349,7 @@ class CarState(CarStateBase):
     # ACC emulation (overwriting cruiseState-values from CAN)
     self.gap_adjust_raw = int(pt_cp.vl["GRA_Neu"]['GRA_Zeitluecke'])
     self.gas_inhibit = False    # for true coasting
-    self.ACC_engaged, self.v_ACC, self.dist_profile, self.accel_profile = self.ACC.update_acc_iter_4CS(ret.vEgo*CV.MS_TO_KPH, self.buttonStates, self.gap_adjust_raw, ret.cruiseState.available, self.openpilot_enabled, ret.cruiseState.enabled)
+    self.ACC_engaged, self.v_ACC, self.dist_profile, self.accel_profile = self.ACC.update_acc_iter_4CS(ret.vEgo*CV.MS_TO_KPH, self.buttonStates, self.gap_adjust_raw, ret.cruiseState.available, self.openpilot_enabled, stockGRA_active=False) #ret.cruiseState.enabled)
     # Engage open pilot if ACC emulation says so
     if self.CP.enableGasInterceptor and self.ACC_engaged:
       self.openpilot_enabled = True
