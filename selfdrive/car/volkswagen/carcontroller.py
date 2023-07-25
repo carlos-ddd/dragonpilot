@@ -59,9 +59,9 @@ class CarController():
 
     self.steer_rate_limited = False
 
-    self.CdddL = Carlosddd_Logmodule("LoC")
+    #self.CdddL = Carlosddd_Logmodule("LoC")
     self.CdddA = Carlosddd_Acceltest()
-    self.CdddAL = Carlosddd_Accellearner()
+    #self.CdddAL = Carlosddd_Accellearner()
     
     self.pid = PIController((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
                             (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
@@ -75,7 +75,7 @@ class CarController():
   def update(self, c, enabled, CS, frame, ext_bus, actuators, visual_alert, audible_alert, left_lane_visible, right_lane_visible, left_lane_depart, right_lane_depart, dragonconf):
     """ Controls thread """
 
-    CdddL_hook = True # log every function call, set to False to only have when gas / brake CAN message is sent
+    #CdddL_hook = True # log every function call, set to False to only have when gas / brake CAN message is sent
 
     cddda_apply_gas, cddda_apply_brake, cddda_active = self.CdddA.update(enabled, CS.out.vEgo, CS.out.aEgo, CS.out.clutchPressed, CS.out.gasPressed, CS.detected_gear, CS.out.engineRPM)
 
@@ -224,7 +224,7 @@ class CarController():
       self.mobPreEnable = mobPreEnable
       self.mobEnabled = mobEnabled
       can_sends.append(self.create_braking_control(self.packer_pt, CANBUS.br, apply_brake, idx, mobEnabled, mobPreEnable, stopping_wish))
-      CdddL_hook = True
+      #CdddL_hook = True
     else:
       apply_brake = float('nan')    # for CdddL
 
@@ -419,7 +419,7 @@ class CarController():
         apply_gas = int(apply_gas)
 
       can_sends.append(self.create_gas_control(self.packer_pt, CANBUS.cam, apply_gas, frame // 2))
-      CdddL_hook = True
+      #CdddL_hook = True
     else:
       apply_brake = float('nan')    # for CdddL
 
@@ -529,23 +529,23 @@ class CarController():
     new_actuators = actuators.copy()
     new_actuators.steer = self.apply_steer_last / P.STEER_MAX
 
-    if CdddL_hook:
-        self.CdddL.update('vEgo', CS.out.vEgo)
-        self.CdddL.update('aEgo', CS.out.aEgo)
-        self.CdddL.update('final_accel', actuators.accel)
-        self.CdddL.update('apply_brake', apply_brake)
-        self.CdddL.update('apply_gas', apply_gas)
-        self.CdddL.update('detected_gear', CS.detected_gear)
-        self.CdddL.update('engineRPM', CS.out.engineRPM)
-        self.CdddL.update('clutchPressed', CS.out.clutchPressed, convert=True)
-        self.CdddL.update('ecuGas', CS.gas_ecu)
-        self.CdddL.update('ecuLeergas', CS.leergas, convert=True)
-        self.CdddL.update('brakePressed', CS.out.brakePressed, convert=True)
-        self.CdddL.update('cddda_active', cddda_active, convert=True)
-        self.CdddL.update('enabled', enabled, convert=True)
-        self.CdddL.update('pedal1', CS.gasInterceptorSensor1) # CS.gas is simply (gasInterceptorSensor1+gasInterceptorSensor2)/2 -> calculated yourself in numpy!
-        self.CdddL.update('pedal2', CS.gasInterceptorSensor2)
-        self.CdddL.slice_done()
+    # if CdddL_hook:
+    #     self.CdddL.update('vEgo', CS.out.vEgo)
+    #     self.CdddL.update('aEgo', CS.out.aEgo)
+    #     self.CdddL.update('final_accel', actuators.accel)
+    #     self.CdddL.update('apply_brake', apply_brake)
+    #     self.CdddL.update('apply_gas', apply_gas)
+    #     self.CdddL.update('detected_gear', CS.detected_gear)
+    #     self.CdddL.update('engineRPM', CS.out.engineRPM)
+    #     self.CdddL.update('clutchPressed', CS.out.clutchPressed, convert=True)
+    #     self.CdddL.update('ecuGas', CS.gas_ecu)
+    #     self.CdddL.update('ecuLeergas', CS.leergas, convert=True)
+    #     self.CdddL.update('brakePressed', CS.out.brakePressed, convert=True)
+    #     self.CdddL.update('cddda_active', cddda_active, convert=True)
+    #     self.CdddL.update('enabled', enabled, convert=True)
+    #     self.CdddL.update('pedal1', CS.gasInterceptorSensor1) # CS.gas is simply (gasInterceptorSensor1+gasInterceptorSensor2)/2 -> calculated yourself in numpy!
+    #     self.CdddL.update('pedal2', CS.gasInterceptorSensor2)
+    #     self.CdddL.slice_done()
 
     self.CdddAL.update(enabled, CS.out.vEgo, CS.out.aEgo, CS.out.clutchPressed, CS.detected_gear, CS.out.engineRPM, apply_gas, apply_brake, CS.out.gas, CS.leergas, CS.out.brakePressed)
 
